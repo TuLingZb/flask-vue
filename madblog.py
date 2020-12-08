@@ -4,9 +4,8 @@ import sys
 from flask_babel import gettext as _
 from app import create_app
 from app.extensions import db
-from app.models import Role, User
+from app.models import Role, User,SampleSequence
 from config import Config
-
 app = create_app(Config)
 
 # 创建 coverage 实例
@@ -24,7 +23,7 @@ def hello_world():
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'Role': Role, 'User': User,}
+    return {'db': db, 'Role': Role, 'User': User,',':SampleSequence}
 
 
 @app.cli.command()

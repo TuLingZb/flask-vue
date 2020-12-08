@@ -123,7 +123,7 @@ class Role(PaginatedAPIMixin, db.Model):
     default = db.Column(db.Boolean, default=False, index=True)  # 当新增用户时，是否将当前角色作为默认角色赋予新用户
     # permissions = db.Column(db.Integer)  # 角色拥有的权限，各操作对应一个二进制位，能执行某项操作的角色，其位会被设为 1
     users = db.relationship('User', backref='role', lazy='dynamic')
-
+    deleted = db.Column(db.Boolean, default=False)
     def __init__(self, **kwargs):
         super(Role, self).__init__(**kwargs)
         # if self.permissions is None:
@@ -185,6 +185,9 @@ class Role(PaginatedAPIMixin, db.Model):
 
 
 class User(PaginatedAPIMixin, db.Model):
+    '''
+    登录网站录入人员注册信息表
+    '''
     # 设置数据库表名，Post模型中的外键 user_id 会引用 users.id
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -196,9 +199,11 @@ class User(PaginatedAPIMixin, db.Model):
     about_me = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
+
+    deleted = db.Column(db.Boolean, default=False)
     # 反向引用，直接查询出当前用户的所有博客文章; 同时，Post实例中会有 author 属性
     # cascade 用于级联删除，当删除user时，该user下面的所有posts都会被级联删除
-    samples = db.relationship('Sample', backref='author', lazy='dynamic',)
+    squences = db.relationship('SampleSequence', backref='author', lazy='dynamic',)
                             # cascade='all, delete-orphan')
     # 用户注册后，需要先确认邮箱
     confirmed = db.Column(db.Boolean, default=False)
@@ -392,25 +397,209 @@ class User(PaginatedAPIMixin, db.Model):
         return '<User {}>'.format(self.username)
 
 
-class Sample(SearchableMixin, PaginatedAPIMixin, db.Model):
-    __tablename__ = 'posts'
-    __searchable__ = [('title', True), ('summary', True), ('body', False)]
+
+class PatientBasicInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
+    '''
+    样本来源的病人基础信息表
+    '''
+    __tablename__ = 'patients'
+    # __searchable__ = ['',]
+
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    summary = db.Column(db.Text)
-    body = db.Column(db.Text)
+    name = db.Column(db.String(255),comment='病人姓名',default='暂无信息')
+    case_number = db.Column(db.String(255),comment='病历号')
+    sex = db.Column(db.String(255),comment='性别',nullable=False)
+    date = db.Column(db.Date,comment='出生日期',nullable=False)
+    address = db.Column(db.String(255),comment='家庭住址')
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    views = db.Column(db.Integer, default=0)
-    # 外键, 直接操纵数据库当user下面有posts时不允许删除user，下面仅仅是 ORM-level “delete” cascade
-    # db.ForeignKey('users.id', ondelete='CASCADE') 会同时在数据库中指定 FOREIGN KEY level “ON DELETE” cascade
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    comments = db.relationship('Comment', backref='post', lazy='dynamic',
-                               cascade='all, delete-orphan')
-    # 博客文章与喜欢/收藏它的人是多对多关系
-    likers = db.relationship('User', secondary=posts_likes, backref=db.backref('liked_posts', lazy='dynamic'), lazy='dynamic')
+    # 反向引用，直接查询出当前病人的病史; 同时，DiseaseInformation实例中会有 patient_name 属性
+    # cascade 用于级联删除，病人时，该patient下面的所有diseases_history都会被级联删除
+    diseases_history = db.relationship('DiseaseInformation', backref='patient_info', lazy='dynamic',
+                            cascade='all, delete-orphan')
+
+    deleted = db.Column(db.Boolean,default=False)
+
+
+
 
     def __repr__(self):
-        return '<Post {}>'.format(self.title)
+        return '<Patient {}>'.format(self.name)
+
+    def to_dict(self):
+        data = {
+            'id': self.id,
+            'name': self.name,
+            'case_number': self.case_number,
+            'sex': self.sex,
+            'date': self.date,
+            'address': self.address,
+            '_links': {
+                'self': url_for('api.get_patient_diseases', id=self.id)
+            }
+        }
+        return data
+
+    def from_dict(self,data):
+        for field in ['name', 'case_number', 'sex', 'date', 'address']:
+            if field in data:
+                if field == 'date':
+                    data[field] = datetime.strptime(data[field], "%Y-%m-%d")
+                setattr(self, field, data[field])
+
+
+
+
+class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
+    '''样本疾病信息表'''
+    __tablename__ = 'diseases'
+    id = db.Column(db.Integer, primary_key=True)
+    collected_date = db.Column(db.DATE,comment='抽血日期')
+    age = db.Column(db.Integer, comment='就诊年龄')
+    disease_type = db.Column(db.String(255),comment='疾病类型')
+    type = db.Column(db.String(255),comment='类型')
+    tnm = db.Column(db.String(255),comment='TNM')
+    period = db.Column(db.String(255),comment='分期')
+    pathological_immunohistochemistry = db.Column(db.String(255),comment='病理免疫组化')
+    operation_date = db.Column(db.DATE,comment='手术日期')
+    pathological_information = db.Column(db.String(255),comment='病理完整信息')
+    Typing = db.Column(db.String(255),comment='分型')
+    hypertension = db.Column(db.String(255),comment='高血压')
+    diabetes = db.Column(db.String(255),comment='糖尿病')
+    history_of_cancer = db.Column(db.String(255),comment='既往肿瘤病史(若有，注明肿瘤类型)')
+    systemic_diseases = db.Column(db.String(255),comment='系统疾病')
+    family_history = db.Column(db.String(255),comment='家族史')
+    antiviral_therapy = db.Column(db.String(255),comment='抗病毒治疗')
+    preoperative_tumor_treatment = db.Column(db.String(255),comment='术前肿瘤治疗情况（射频、TACE等）')
+    blood_lipids  = db.Column(db.String(255),comment='高血脂(TC、TG、LDL-C、HDL-C)')
+    biochemical_indicators = db.Column(db.String(255),comment='生化指标')
+    lymphocyte = db.Column(db.String(255),comment='淋巴细胞')
+    Neutrophils = db.Column(db.String(255),comment='中性粒细胞')
+    after_AEP = db.Column(db.String(255),comment='术前AFP')
+    after_CEA = db.Column(db.String(255),comment='术前CEA')
+    after_CA19_9 = db.Column(db.String(255),comment='术前CA19-9')
+    HBV_DNA = db.Column(db.String(255),comment='HBV-DNA')
+    hepatitis_B_surface_antigen = db.Column(db.String(255),comment='乙肝表面抗原')
+    surface_antibody = db.Column(db.String(255),comment='表面抗体')
+    E_antigen = db.Column(db.String(255),comment='e抗原')
+    E_antibody = db.Column(db.String(255),comment='e抗体')
+    core_antibody = db.Column(db.String(255),comment='核心抗体')
+    smoking = db.Column(db.Boolean,comment='吸烟')
+    treatment = db.Column(db.Text,comment='治疗情况')
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    deleted = db.Column(db.Boolean, default=False)
+
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'))
+
+    sequences = db.relationship('SampleSequence', backref='disease_info', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Disease {}>'.format(self.disease_type)
+
+    def to_dict(self):
+        data = {
+            'id': self.id,
+            'collected_date': self.collected_date,
+            'age': self.age,
+            'disease_type': self.disease_type,
+            'type': self.type,
+            'TNM': self.tnm,
+            'period': self.period,
+            'pathological_immunohistochemistry': self.pathological_immunohistochemistry,
+            'operation_date': self.operation_date,
+            'pathological_information': self.pathological_information,
+            'Typing': self.Typing,
+            'hypertension': self.hypertension,
+            'diabetes': self.diabetes,
+            'history_of_cancer': self.history_of_cancer,
+            'systemic_diseases': self.systemic_diseases,
+            'family_history': self.family_history,
+            'antiviral_therapy': self.antiviral_therapy,
+            'preoperative_tumor_treatment': self.preoperative_tumor_treatment,
+            'blood_lipids': self.blood_lipids,
+            'biochemical_indicators': self.biochemical_indicators,
+            'lymphocyte': self.lymphocyte,
+            'Neutrophils': self.Neutrophils,
+            'after_AEP': self.after_AEP,
+            'after_CEA': self.after_CEA,
+            'after_CA19_9': self.after_CA19_9,
+            'HBV_DNA': self.HBV_DNA,
+            'hepatitis_B_surface_antigen': self.hepatitis_B_surface_antigen,
+            'surface_antibody': self.surface_antibody,
+            'E_antigen': self.E_antigen,
+            'E_antibody': self.E_antibody,
+            'core_antibody': self.core_antibody,
+            'smoking': self.smoking,
+            'treatment': self.treatment,
+            'patient_id': self.patient_id,
+            'sequences': [sequence.id for sequence in self.sequences],
+            '_links': {
+                'self': url_for('api.get_role', id=self.id)
+            }
+        }
+        if self.patient_info:
+            data['patient'] = {
+                'id': self.patient_info.id,
+                'name': self.patient_info.name,
+                'case_number': self.patient_info.case_number,
+                'sex': self.patient_info.sex,
+                'date': self.patient_info.date,
+                'address': self.patient_info.address,
+            }
+        if self.sequences:
+            data['sequences'] = [
+                {
+                    sequence.sequence_id,
+                    sequence.batch,
+                    sequence.id,
+                    sequence.gao_lab_id,
+                    sequence.introduction,
+                    sequence.sample_origin,
+                    sequence.collected_date,
+                    sequence.timestamp,
+                    sequence.deleted,
+                }
+                for sequence in self.sequences
+            ]
+        return data
+
+    def from_dict(self, data):
+        for field in ['name', 'case_number', 'sex', 'date', 'address']:
+            if field in data:
+                setattr(self, field, data[field])
+
+
+
+
+
+
+
+
+
+
+class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
+    '''
+    测序批次记录表
+    '''
+    __tablename__ = 'sequence'
+    __searchable__ = [('title', True), ('summary', True), ('body', False)]
+    sequence_id = db.Column(db.Integer, primary_key=True)
+    batch = db.Column(db.String(255),comment='测序批次')
+    id = db.Column(db.String(255),comment='id')
+    gao_lab_id = db.Column(db.String(255),comment='gao_lab_id')
+    introduction = db.Column(db.Text)
+    sample_origin = db.Column(db.String(255),comment='样品来源')
+    collected_date = db.Column(db.DATE,comment='收样日期')
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    deleted = db.Column(db.Boolean, default=False)
+
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'),comment='录入人id')
+
+    results = db.relationship('SequenceResult', backref='sequence', lazy='dynamic')
+
+    disease_id = db.Column(db.Integer, db.ForeignKey('diseases.id'),comment='疾病详细信息id')
+
+    def __repr__(self):
+        return '<Squence {}>'.format(self.sequence_id)
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
@@ -418,25 +607,37 @@ class Sample(SearchableMixin, PaginatedAPIMixin, db.Model):
         target: 有监听事件发生的 Post 实例对象
         value: 监听哪个字段的变化
         '''
-        if not target.summary:  # 如果前端不填写摘要，是空str，而不是None
-            target.summary = value[:200] + '  ... ...'  # 截取 body 字段的前200个字符给 summary
+        #todo
+        # print('666',target,value)
+        # if not target.introduction:  # 如果前端不填写摘要，是空str，而不是None
+        #     target.introduction = value[:200] + '  ... ...'  # 截取 body 字段的前200个字符给 summary
+        pass
 
     def to_dict(self):
         data = {
+            'sequence_id': self.sequence_id,
+            'batch': self.batch,
             'id': self.id,
-            'title': self.title,
-            'summary': self.summary,
-            'body': self.body,
+            'gao_lab_id': self.gao_lab_id,
+            'introduction': self.introduction,
+            'sample_origin': self.sample_origin,
+            'collected_date': self.collected_date,
             'timestamp': self.timestamp,
-            'views': self.views,
-            'likers_id': [user.id for user in self.likers],
-            'likers': [
+            'author_id': self.author_id,
+            'disease_id': self.disease_id,
+            'result_id': [result.id for result in self.results],
+            'results': [
                 {
-                    'id': user.id,
-                    'username': user.username,
-                    'name': user.name,
-                    'avatar': user.avatar(128)
-                } for user in self.likers
+                    'id': result.id,
+                    'name_1': result.name_1,
+                    'data_quality_input': result.data_quality_input,
+                    'data_quality_bam': result.data_quality_bam,
+                    'data_quality_bam_input': result.data_quality_bam_input,
+                    'data_Quality_uniq_bam': result.data_Quality_uniq_bam,
+                    'data_Quality_uniq_nodup_bam': result.data_Quality_uniq_nodup_bam,
+                    'data_Quality_uniq_nodup_bam_input': result.data_Quality_uniq_nodup_bam_input,
+                    'coverage': result.coverage,
+                } for result in self.results
             ],
             'author': {
                 'id': self.author.id,
@@ -444,39 +645,124 @@ class Sample(SearchableMixin, PaginatedAPIMixin, db.Model):
                 'name': self.author.name,
                 'avatar': self.author.avatar(128)
             },
-            'likers_count': self.likers.count(),
-            'comments_count': self.comments.count(),
+            'disease': {
+                'id': self.disease_info.id,
+                'collected_date': self.disease_info.collected_date,
+                'age': self.disease_info.age,
+                'disease_type': self.disease_info.disease_type,
+                'type': self.disease_info.type,
+                'TNM': self.disease_info.tnm,
+                'period': self.disease_info.period,
+                'pathological_immunohistochemistry': self.disease_info.pathological_immunohistochemistry,
+                'operation_date': self.disease_info.operation_date,
+                'pathological_information': self.disease_info.pathological_information,
+                'Typing': self.disease_info.Typing,
+                'hypertension': self.disease_info.hypertension,
+                'diabetes': self.disease_info.diabetes,
+                'history_of_cancer': self.disease_info.history_of_cancer,
+                'systemic_diseases': self.disease_info.systemic_diseases,
+                'family_history': self.disease_info.family_history,
+                'antiviral_therapy': self.disease_info.antiviral_therapy,
+                'preoperative_tumor_treatment': self.disease_info.preoperative_tumor_treatment,
+                'blood_lipids': self.disease_info.blood_lipids,
+                'biochemical_indicators': self.disease_info.biochemical_indicators,
+                'lymphocyte': self.disease_info.lymphocyte,
+                'Neutrophils': self.disease_info.Neutrophils,
+                'after_AEP': self.disease_info.after_AEP,
+                'after_CEA': self.disease_info.after_CEA,
+                'after_CA19_9': self.disease_info.after_CA19_9,
+                'HBV_DNA': self.disease_info.HBV_DNA,
+                'hepatitis_B_surface_antigen': self.disease_info.hepatitis_B_surface_antigen,
+                'surface_antibody': self.disease_info.surface_antibody,
+                'E_antigen': self.disease_info.E_antigen,
+                'E_antibody': self.disease_info.E_antibody,
+                'core_antibody': self.disease_info.core_antibody,
+                'smoking': self.disease_info.smoking,
+                'treatment': self.disease_info.treatment,
+                'patient_id': self.disease_info.patient_id,
+                'sequences': [sequence.id for sequence in self.disease_info.sequences]
+
+            },
             '_links': {
-                'self': url_for('api.get_post', id=self.id),
+                'self': url_for('api.get_sequence', id=self.id),  #获取详情 TODO
                 'author_url': url_for('api.get_user', id=self.author_id),
-                'comments': url_for('api.get_post_comments', id=self.id)
+                'disease_url': url_for('api.get_disease_info', id=self.disease_id)
             }
         }
         return data
 
     def from_dict(self, data):
-        for field in ['title', 'summary', 'body', 'timestamp', 'views']:
+        for field in ['sequence_id', 'batch', 'id', 'gao_lab_id', 'introduction','sample_origin','collected_date','timestamp','author_id','disease_id']:
             if field in data:
                 setattr(self, field, data[field])
 
-    def is_liked_by(self, user):
-        '''判断用户 user 是否已经收藏过该文章'''
-        return user in self.likers
+    # def is_liked_by(self, user):
+    #     '''判断用户 user 是否已经收藏过该文章'''
+    #     return user in self.likers
+    #
+    # def liked_by(self, user):
+    #     '''收藏'''
+    #     if not self.is_liked_by(user):
+    #         self.likers.append(user)
+    #
+    # def unliked_by(self, user):
+    #     '''取消收藏'''
+    #     if self.is_liked_by(user):
+    #         self.likers.remove(user)
 
-    def liked_by(self, user):
-        '''收藏'''
-        if not self.is_liked_by(user):
-            self.likers.append(user)
 
-    def unliked_by(self, user):
-        '''取消收藏'''
-        if self.is_liked_by(user):
-            self.likers.remove(user)
+db.event.listen(SampleSequence.introduction, 'set', SampleSequence.on_changed_body)  # body 字段有变化时，执行 on_changed_body() 方法
+db.event.listen(SampleSequence, 'after_insert', SampleSequence.receive_after_insert)
+db.event.listen(SampleSequence, 'after_delete', SampleSequence.receive_after_delete)
 
 
-db.event.listen(Post.body, 'set', Post.on_changed_body)  # body 字段有变化时，执行 on_changed_body() 方法
-db.event.listen(Post, 'after_insert', Post.receive_after_insert)
-db.event.listen(Post, 'after_delete', Post.receive_after_delete)
+class SequenceResult(SearchableMixin, PaginatedAPIMixin, db.Model):
+    __tablename__ = 'results'
+
+    id = db.Column(db.Integer,primary_key=True,comment='测序结果id')
+
+    name_1 = db.Column(db.String(255),comment='name-1')
+    data_quality_input = db.Column(db.Float,comment='')
+    data_quality_bam = db.Column(db.Float,comment='')
+    data_quality_bam_input = db.Column(db.Float,comment='')
+    data_Quality_uniq_bam = db.Column(db.Float,comment='')
+    data_Quality_uniq_nodup_bam = db.Column(db.Float,comment='')
+    data_Quality_uniq_nodup_bam_input = db.Column(db.Float,comment='')
+    coverage = db.Column(db.Float,comment='')
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    deleted = db.Column(db.Boolean, default=False)
+
+    sequence_id = db.Column(db.Integer, db.ForeignKey('sequence.id'), comment='测序id')
+
+
+    def __repr__(self):
+        return '<Results {}>'.format(self.id)
+
+
+    def to_dict(self):
+        data = {
+            'id': self.id,
+            'name_1': self.name_1,
+            'data_quality_input': self.data_quality_input,
+            'data_quality_bam': self.data_quality_bam,
+            'data_quality_bam_input': self.data_quality_bam_input,
+            'data_Quality_uniq_bam': self.data_Quality_uniq_bam,
+            'data_Quality_uniq_nodup_bam': self.data_Quality_uniq_nodup_bam,
+            'data_Quality_uniq_nodup_bam_input': self.data_Quality_uniq_nodup_bam_input,
+            'coverage': self.coverage,
+            'sequence_id': self.sequence_id,
+            '_links': {
+                'self': url_for('api.get_role', id=self.id)
+            }
+        }
+        return data
+
+    def from_dict(self,data):
+        for field in ['name_1', 'data_quality_input', 'data_quality_bam', 'data_quality_bam_input', 'data_Quality_uniq_bam','data_Quality_uniq_nodup_bam','data_Quality_uniq_nodup_bam_input','coverage','sequence_id']:
+            if field in data:
+                setattr(self, field, data[field])
+
+
 
 #
 #

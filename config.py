@@ -29,8 +29,10 @@ class Config(object):
     # Redis 用于 RQ 任务队列
     REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
     # Elasticsearch 全文检索
-    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL') or '127.0.0.1:9200'
+    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL',None)
     # Flask-Babel
     BABEL_DEFAULT_LOCALE = 'en'
     BABEL_DEFAULT_TIMEZONE = 'UTC'
     LANGUAGES = ['zh', 'en']
+
+    WRITE = ['administrator','author']
