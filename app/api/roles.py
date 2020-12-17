@@ -57,7 +57,7 @@ from app.utils.decorator import admin_required
 
 
 @bp.route('/roles', methods=['GET'])
-@token_auth.login_required(role='administrator')
+@token_auth.login_required(role='admin')
 def get_roles():
     '''返回所有角色的集合'''
     page = request.args.get('page', 1, type=int)
@@ -67,7 +67,7 @@ def get_roles():
 
 
 @bp.route('/roles/<int:id>', methods=['GET'])
-@token_auth.login_required(role='administrator')
+@token_auth.login_required(role='admin')
 def get_role(id):
     '''返回一个角色'''
     role = Role.query.get_or_404(id)
@@ -77,7 +77,7 @@ def get_role(id):
 
 
 @bp.route('/roles/<int:id>', methods=['PUT'])
-@token_auth.login_required(role='administrator')
+@token_auth.login_required(role='admin')
 def update_role(id):
     '''修改用户角色'''
     user = User.query.get_or_404(id)

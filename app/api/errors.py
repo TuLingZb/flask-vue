@@ -2,15 +2,17 @@ from flask import jsonify
 from werkzeug.http import HTTP_STATUS_CODES
 from app.api import bp
 from app.extensions import db
+from app.utils.my_response import restfulResponse
 
 
 def error_response(status_code, message=None):
-    payload = {'error': HTTP_STATUS_CODES.get(status_code, 'Unknown error')}
-    if message:
-        payload['message'] = message
-    response = jsonify(payload)
-    response.status_code = status_code
-    return response
+    # payload = {'error': HTTP_STATUS_CODES.get(status_code, 'Unknown error')}
+    # if message:
+    #     payload['message'] = message
+    # response = jsonify(payload)
+    # response.status_code = status_code
+    # return response
+    return restfulResponse(data="",msg=message,code=status_code)
 
 
 def bad_request(message):
@@ -27,3 +29,12 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return error_response(500)
+
+# def restfulResponse(data,code=20000,msg='success'):
+#     return jsonify(
+#         {
+#         'code':code,
+#         'msg':msg,
+#         'data': data,
+#         }
+#     )

@@ -3,11 +3,39 @@ from app.api import bp
 from app.api.auth import token_auth
 from app.api.errors import error_response, bad_request
 from app.extensions import db
-from app.models import Permission,PatientBasicInformation,DiseaseInformation
+from app.models import Permission,PatientBasicInformation,DiseaseInformation,SampleSequence
 from app.utils.decorator import permission_required
 from config import Config
+from app.utils.my_response import restfulResponse
 
-@bp.route('/patients/', methods=['POST'])
+@bp.route('/disease/import', methods=['POST'])
+@token_auth.login_required(role=Config.WRITE)
+def excel_create_disease():
+    '''excel导入样本疾病信息'''
+    data = request.get_json()
+    if not data:
+        return bad_request('excel表内容为空')
+
+    sample_data = data['data']
+    print(sample_data)
+    sample_header = data['header']
+    # print(sample_header)
+    for data in sample_data:
+        patient = PatientBasicInformation.query.filter(PatientBasicInformation.name == data['姓名']).filter(PatientBasicInformation.name == data['样品来源']).first() or PatientBasicInformation()
+        patient.from_dict(data, trans=True)
+        disease = DiseaseInformation.query.filter(DiseaseInformation.patient_id == patient.id).filter(DiseaseInformation.disease_type == data["疾病类型"]).first() or DiseaseInformation()
+        disease.from_dict(data,trans=True)
+        disease.patient_id = patient.id
+        sample = SampleSequence.query.get(data['Sequence ID']) or SampleSequence()
+        sample.from_dict(data,trans=True)
+        sample.disease_id = disease.id
+        db.session.add(disease)
+        db.session.add(patient)
+        db.session.add(sample)
+    db.session.commit()
+    return restfulResponse({})
+
+@bp.route('/patient/create', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
 def create_post():
     '''添加新的病人基础信息'''
@@ -39,20 +67,38 @@ def create_post():
     return response
 
 
-@bp.route('/patients/', methods=['GET'])
+@bp.route('/patient/list', methods=['GET'])
 def get_patients():
     '''返回病人集合，分页'''
     page = request.args.get('page', 1, type=int)
     per_page = min(
         request.args.get(
             'per_page', current_app.config['POSTS_PER_PAGE'], type=int), 100)
+    queryMap = []
+
+    queryMap.append(SampleSequence.deleted == False)  # 非删除
+
+    name = request.args.get('name', None)
+    sex = request.args.get('sex', None)
+    if name:
+        queryMap.append(PatientBasicInformation.name == name)
+    if sex:
+        queryMap.append(PatientBasicInformation.sex == sex)
+
+
+    querySort = []
+    sort = request.args.get('sort', '+id')
+    if sort == "+id":
+        querySort.append(PatientBasicInformation.id.asc())
+    else:
+        querySort.append(PatientBasicInformation.id.desc())
     data = PatientBasicInformation.to_collection_dict(
-        PatientBasicInformation.query.order_by(PatientBasicInformation.timestamp.desc()), page, per_page,
+        PatientBasicInformation.query.filter(*queryMap).order_by(*querySort), page, per_page,
         'api.get_patients')
-    return jsonify(data)
+    return restfulResponse(data)
 
 
-@bp.route('/patients/<int:id>', methods=['GET'])
+@bp.route('/patient/detail/<int:id>', methods=['GET'])
 @token_auth.login_required(role=Config.WRITE)
 def get_patient(id):
     '''返回一个病人信息'''
@@ -77,9 +123,9 @@ def get_patient(id):
     return jsonify(data)
 
 
-@bp.route('/patients/<int:id>', methods=['PUT'])
+@bp.route('/patients/update/', methods=['PUT'])
 @token_auth.login_required(role=Config.WRITE)
-def update_post(id):
+def update_post():
     '''修改病人信息'''
     post = PatientBasicInformation.query.get_or_404(id)
     # if g.current_user != post.author and not g.current_user.is_administrator():
@@ -124,18 +170,18 @@ def delete_post(id):
 #病人病历相关
 ##
 
-@bp.route('/diseases/<int:id>', methods=['POST'])
+@bp.route('/disease/create', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
-def create_disease(id):
+def create_disease():
     '''添加新的病人患病信息'''
     data = request.get_json()
     print(data)
     if not data:
         return bad_request('You must post JSON data.')
 
-    patient = PatientBasicInformation.query.get_or_404(id)
-    if not patient:
-        return bad_request('该病人信息不存在')
+    # patient = PatientBasicInformation.query.get_or_404(id)
+    # if not patient:
+    #     return bad_request('该病人信息不存在')
 
     disease_info = DiseaseInformation()
     disease_info.from_dict(data)
@@ -143,26 +189,26 @@ def create_disease(id):
 
     db.session.add(disease_info)
     db.session.commit()
-    response = jsonify(disease_info.to_dict())
+    response = restfulResponse(disease_info.to_dict())
     response.status_code = 201
     # HTTP协议要求201响应包含一个值为新资源URL的Location头部
-    response.headers['Location'] = url_for('api.get_patients', id=patient.id)
+    # response.headers['Location'] = url_for('api.get_patient_diseases', id=data.id)
     return response
 
-@bp.route('/patients/<int:id>/diseases', methods=['GET'])
-def get_patient_diseases(id):
-    '''获取病人下的所有疾病信息'''
-    post = PatientBasicInformation.query.get_or_404(id)
+@bp.route('/disease/list', methods=['GET'])
+def get_patient_diseases():
+    '''获取所有疾病信息'''
     page = request.args.get('page', 1, type=int)
     per_page = min(
         request.args.get(
-            'per_page', current_app.config['COMMENTS_PER_PAGE'], type=int), 100)
-    #
+            'limit', current_app.config['POSTS_PER_PAGE'], type=int), 100)
     data = DiseaseInformation.to_collection_dict(
-        post.diseases_history.filter(DiseaseInformation.deleted==False).order_by(DiseaseInformation.timestamp.desc()), page, per_page,
-        'api.get_patient_diseases', id=id)
-    # 再添加子孙到一级评论的 descendants 属性上
-    return jsonify(data)
+        DiseaseInformation.query.filter(DiseaseInformation.deleted == False).order_by(DiseaseInformation.timestamp.desc()), page,
+        per_page,
+        'api.get_sequences')
+    print('疾病',data)
+    print(type(data))
+    return restfulResponse(data)
 
 @bp.route('/diseases/<int:id>', methods=['GET'])
 def get_disease(id):
@@ -189,36 +235,36 @@ def get_disease(id):
         data['_links']['prev'] = None
     return jsonify(data)
 
-@bp.route('/diseases/<int:id>', methods=['PUT'])
+@bp.route('/disease/update', methods=['PUT'])
 @token_auth.login_required(role=Config.WRITE)
-def update_disease(id):
+def update_disease():
     '''修改疾病信息'''
-    post = DiseaseInformation.query.get_or_404(id)
     # if g.current_user != post.author and not g.current_user.is_administrator():
     #     return error_response(403)
 
     data = request.get_json()
+    post = DiseaseInformation.query.get_or_404(data['id'])
     if not data:
         return bad_request('You must post JSON data.')
 
 
     post.from_dict(data)
     db.session.commit()
-    return jsonify(post.to_dict())
+    return restfulResponse(post.to_dict())
 
 
-@bp.route('/patients/<int:id>', methods=['DELETE'])
+@bp.route('/disease/delete/<int:id>', methods=['DELETE'])
 @token_auth.login_required(role=Config.WRITE)
 def delete_disease(id):
     '''删除一条疾病信息'''
     post = DiseaseInformation.query.get_or_404(id)
     # if g.current_user != post.author and not g.current_user.is_administrator():
     #     return error_response(403)
-    if post.sequences is not None:
-        return jsonify({'msg':'此疾病还有关联测序信息尚未清除，不能删除'})
+    # if post.sequences is not None:
+    #     return jsonify({'msg':'此疾病还有关联测序信息尚未清除，不能删除'})
     post.deleted = True
     db.session.commit()
-    return '', 204
+    return restfulResponse({})
 
 
 

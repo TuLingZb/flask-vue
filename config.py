@@ -35,4 +35,4 @@ class Config(object):
     BABEL_DEFAULT_TIMEZONE = 'UTC'
     LANGUAGES = ['zh', 'en']
 
-    WRITE = ['administrator','author']
+    WRITE = ['admin','author']

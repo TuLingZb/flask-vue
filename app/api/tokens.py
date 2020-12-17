@@ -2,6 +2,7 @@ from flask import jsonify, g
 from app.api import bp
 from app.api.auth import basic_auth
 from app.extensions import db
+from app.utils.my_response import restfulResponse
 
 
 @bp.route('/tokens', methods=['POST'])
@@ -11,4 +12,5 @@ def get_token():
     # 每次用户登录（即成功获取 JWT 后），更新 last_seen 时间
     g.current_user.ping()
     db.session.commit()
-    return jsonify({'token': token})
+    print(token)
+    return restfulResponse({'token': token})

@@ -10,13 +10,13 @@ from app.extensions import db
 from app.models import Permission,User,Role
 from app.utils.email import send_email
 from app.utils.decorator import permission_required
-
+from app.utils.my_response import restfulResponse
 
 @bp.route('/users/', methods=['POST'])
-def create_user():
+def create_user(api=True):
     '''注册一个新用户'''
     data = request.get_json()
-    if not data:
+    if not data and api:
         return bad_request(_('You must post JSON data.'))
 
     message = {}
@@ -74,13 +74,18 @@ def create_user():
     #            text_body=text_body,
     #            html_body=html_body)
 
-    response = jsonify(user.to_dict())
+    response = restfulResponse(user.to_dict())
     response.status_code = 201
     # HTTP协议要求201响应包含一个值为新资源URL的Location头部
     response.headers['Location'] = url_for('api.get_user', id=user.id)
     return response
 
 
+@bp.route('/user/logout', methods=['POST'])
+@token_auth.login_required
+def logout():
+    """用户退出"""
+    return restfulResponse({})
 @bp.route('/users/', methods=['GET'])
 @token_auth.login_required(role=['administrator'])
 def get_users():
@@ -93,51 +98,42 @@ def get_users():
     return jsonify(data)
 
 
-@bp.route('/users/<int:id>', methods=['GET'])
-@token_auth.login_required
-def get_user(id):
+@bp.route('/user/info', methods=['GET'])
+@token_auth.login_required()
+def get_user():
     '''返回一个用户'''
-    user = User.query.get_or_404(id)
-    if g.current_user == user:
-        return jsonify(user.to_dict(include_email=True))
-    # 如果是查询其它用户，添加 是否已关注过该用户 的标志位
+    id = request.args.get('id', None, type=int)
+    if id:
+        user = User.query.get_or_404(id)
+    if id is None:
+        user = g.current_user
+        return restfulResponse(user.to_dict(include_email=True))
     data = user.to_dict()
-    return jsonify(data)
+    return restfulResponse(data)
 
 
-@bp.route('/users/<int:id>', methods=['PUT'])
+@bp.route('/user/update', methods=['PUT'])
 @token_auth.login_required
-def update_user(id):
+def update_user():
     '''修改一个用户'''
-    user = User.query.get_or_404(id)
-    #自己可以修改自己的用户资料
-    if g.current_user != user:
-        return error_response(403)
+    print('dsddsd',g.current_user.id)
+    user = User.query.get_or_404(g.current_user.id)
+    print(user)
     data = request.get_json()
     if not data:
         return bad_request(_('You must post JSON data.'))
-
-    message = {}
-    if 'username' in data and not data.get('username', None).strip():
-        message['username'] = _('Please provide a valid username.')
+    email = data.get('email', None)
+    name = data.get('name', None)
 
     pattern = '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
-    if 'email' in data and not re.match(pattern, data.get('email', None)):
-        message['email'] = _('Please provide a valid email address.')
-
-    if 'username' in data and \
-            User.query.filter_by(username=data['username']).first():
-        message['username'] = _('Please use a different username.')
-    if 'email' in data and data['email'] != user.email and \
-            User.query.filter_by(email=data['email']).first():
-        message['email'] = _('Please use a different email address.')
-    print(message)
-    if message:
-        return bad_request(message)
+    if not email or not re.match(pattern, email):
+        return restfulResponse(data={}, msg="请提供正确的邮箱地址.", code=403)
+    if not name:
+        return restfulResponse(data={}, msg="用户名不能为空.", code=403)
 
     user.from_dict(data, new_user=False)
     db.session.commit()
-    return jsonify(user.to_dict())
+    return restfulResponse(user.to_dict())
 
 
 @bp.route('/users/<int:id>', methods=['DELETE'])

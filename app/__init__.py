@@ -42,7 +42,7 @@ def configure_app(app, config_class):
 
 def configure_blueprints(app):
     # 注册 blueprint
-    app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(api_bp, url_prefix='/api/vue-element-admin')
 
 
 def configure_extensions(app):
