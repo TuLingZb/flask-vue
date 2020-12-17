@@ -1,3 +1,4 @@
 flask-env
 .DS_Store
 app.db
+migrations
