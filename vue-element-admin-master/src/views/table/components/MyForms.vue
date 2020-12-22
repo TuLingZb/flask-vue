@@ -318,9 +318,9 @@ export default {
               });
             });
         } else {
-          // this.$swal("Cancelled", "The post is safe :)", "error");
+          // this.$swal("取消led", "The post is safe :)", "error");
           this.$notify({
-            title: "Canceled",
+            title: "取消",
             message: "Delete canceled",
             type: "warning",
             duration: 2000,

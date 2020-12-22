@@ -37,24 +37,39 @@
 
     <el-table ref="multipleTable" :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 98%;" max-height=" 80%" @sort-change="sortChange" element-loading-text="拼命加载中" @selection-change="handleSelectionChange">
       <el-table-column min-width='100px' type="selection" align="center"></el-table-column>
-      <el-table-column label="疾病类型" prop="disease_type" sortable="custom" align="center" width="180px" :class-name="getSortClass('id')">
+      <el-table-column v-if="true" label="id" prop="id" sortable="custom" width="110px" align="center" :class-name="getSortClass('id')">
         <template slot-scope="{row}">
-          <span>{{ row.disease_type }}</span>
+          <span style="color:red;">{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="就诊年龄" width="150px" align="center">
+      <el-table-column label="就诊年龄" prop="age" sortable="custom" align="center" width="180px">
         <template slot-scope="{row}">
           <span>{{ row.age }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="抽血日期" width="150px" align="center">
+      <el-table-column label="病理完整信息" width="500px" align="left">
         <template slot-scope="{row}">
-          <span>{{ row.collected_date | parseTime('{y}-{m}-{d}') }}</span>
+          <span>{{ row.pathological_information }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="类型" width="150px" align="center">
+      <el-table-column label="进展" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.type }}</span>
+          <span>{{ row.process }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="分型" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Typing }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="分级" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Class }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="病理免疫组化" width="300px" align="left">
+        <template slot-scope="{row}">
+          <span>{{ row.pathological_immunohistochemistry }}</span>
         </template>
       </el-table-column>
       <el-table-column label="TNM" width="150px" align="center">
@@ -67,24 +82,35 @@
           <span>{{ row.period }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="病理免疫组化" width="150px" align="center">
+      <el-table-column label="亚型/部位" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.pathological_immunohistochemistry }}</span>
+          <span>{{ row.Subtype }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="手术前后" width="150px" align="center">
+
+      <el-table-column label="抽血日期" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.operation_date }}</span>
+          <span>{{ row.collected_date | parseTime('{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="病理完整信息" width="150px" align="center">
+      <el-table-column label="手术日期" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.pathological_information }}</span>
+          <span>{{ row.operation_date | parseTime('{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="分型" width="150px" align="center">
+      <el-table-column label="术前肿瘤治疗情况（射频、TACE等）" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.Typing }}</span>
+          <span>{{ row.preoperative_tumor_treatment }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="主诉" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Chief_complaint }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="饮酒（包括频度、种类、量）" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.drinking }}</span>
         </template>
       </el-table-column>
       <el-table-column label="高血压" width="150px" align="center">
@@ -95,6 +121,11 @@
       <el-table-column label="糖尿病" width="150px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.diabetes }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="吸烟史" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.smoking }}</span>
         </template>
       </el-table-column>
       <el-table-column label="既往肿瘤病史(若有，注明肿瘤类型)" width="150px" align="center">
@@ -117,17 +148,12 @@
           <span>{{ row.antiviral_therapy }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="术前肿瘤治疗情况（射频、TACE等）" width="150px" align="center">
-        <template slot-scope="{row}">
-          <span>{{ row.preoperative_tumor_treatment }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="高血脂(TC、TG、LDL-C、HDL-C)" width="150px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.blood_lipids }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="生化指标" width="150px" align="center">
+      <el-table-column label="生化指标" width="500px" align="left">
         <template slot-scope="{row}">
           <span>{{ row.biochemical_indicators }}</span>
         </template>
@@ -187,21 +213,227 @@
           <span>{{ row.core_antibody }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="吸烟" width="150px" align="center">
+      <el-table-column label="丙肝" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.smoking }}</span>
+          <span>{{ row.hcv }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="治疗情况" width="150px" align="center">
+      <el-table-column label="HCV-Ab" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.treatment }}</span>
+          <span>{{ row.HCV_Ab }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="录入时间" width="150px" align="center">
+      <el-table-column label="HCV-RNA" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.timestamp | parseTime('{y}-{m}-{d}')}}</span>
+          <span>{{ row.HCV_RNA }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="甲状腺+" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.thyroid }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="总胆红素" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.total_bilirubin }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="白蛋白" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.albumin }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="凝血酶原时间" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.prothrombin_time | parseTime('{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="肝性脑病" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.hepatic_encephalopathy }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="Child-Pugh" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Child_Pugh }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="腹水" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.ascites }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="术后化疗" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Postoperative_chemotherapy }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="发现复发时间" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Recurrence_time | parseTime('{y}-{m}-{d}')}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="靶向药物治疗（注明药物）" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Targeted_drug_therapy }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="体内放疗（放射性粒子植入）" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Postoperative_chemotherapy }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="射频治疗" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Radiofrequency_therapy }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="手术治疗" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.surgical_treatment }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="死亡时间" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Time_of_death | parseTime('{y}-{m}-{d}')}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="术后异常" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Postoperative_abnormalities }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="存活时间" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.survival_time | parseTime('{y}-{m}-{d}')}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="术前肠镜" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Preoperative_colonoscopy }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="肠镜病理" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Colonoscopy_pathology }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="肝转移" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Liver_metastasis }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="个数" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.number }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="最大径（最大径和）（mm）" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.max_diameter }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="大小（mm）" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.diameter }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="子灶" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.sub_stove }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="肉眼癌栓" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Macroscopic_tumor_thrombus }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="癌栓位置" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Location_of_tumor_thrombus }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="包膜" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.envelope }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="坏死" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.necrosis }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="肝外侵犯（写明部位）" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Extrahepatic_nvasion }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="镜下包膜有无突破" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Capsule_breakthrough }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="镜下多灶性生长" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Multifocal_growth_under_microscope }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="镜下子灶" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Mirror_sub_stove }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="微血管癌栓" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Microvascular_tumor_thrombus }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="肝硬化" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.cirrhosis }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="肝炎" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.hepatitis }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="BCLC" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.BCLC }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="UICC" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.UICC }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="术后TACE（注明治疗次数）" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Postoperative_TACE }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="术后抗病毒治疗（注明药物）" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Antiviral_therapy_after_operation }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="PSA" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.PSA }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="Lauren分类" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.Lauren_classification }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="备注" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.remarks }}</span>
+        </template>
+      </el-table-column>
+
       <!-- <el-table-column label="Title" min-width="400px" align="center">
         <template slot-scope="{row}">
           <span class="link-type" @click="handleUpdate(row)">{{ row.sequence_id }}</span>
@@ -213,11 +445,6 @@
           <span>{{ row.author.username }}</span>
         </template>
       </el-table-column> -->
-      <el-table-column v-if="false" label="id" width="110px" align="center">
-        <template slot-scope="{row}">
-          <span style="color:red;">{{ row.id }}</span>
-        </template>
-      </el-table-column>
       <!-- <el-table-column label="Imp" width="80px">
         <template slot-scope="{row}">
           <svg-icon v-for="n in + row.importance" :key="n" icon-class="star" class="meta-item__icon" />
@@ -254,117 +481,7 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <div class="form-container">
-        <!-- <disease-form :formData.sync="temp" /> -->
-        <el-form :inline="true" ref="dataForm" :model="temp" :rules="rules" label-width="110px" class="demo-ruleForm" size="medium">
-          <el-form-item label="疾病类型" prop="disease_type">
-            <el-input v-model.number="temp.disease_type" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="就诊年龄" prop="age">
-            <el-input v-model.number="temp.age" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="抽血日期" prop="collected_date">
-            <el-date-picker v-model="temp.collected_date" type="date" placeholder="Please pick a date" style="width:195px" />
-          </el-form-item>
-          <el-form-item label="类型" prop="type">
-            <el-input v-model="temp.type" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="TNM" prop="tnm">
-            <el-input v-model="temp.tnm" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="分期" prop="period">
-            <el-input v-model="temp.period" maxlength="20" show-word-limit />
-          </el-form-item>
-          <el-form-item label="病理免疫组化" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.pathological_immunohistochemistry" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="手术日期" prop="pathological_immunohistochemistry">
-            <el-date-picker v-model="temp.operation_date" type="date" placeholder="Please pick a date" style="width:195px" />
-          </el-form-item>
-          <el-form-item label="病理完整信息" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.pathological_information" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="分型" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.Typing" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="高血压" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.hypertension" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="糖尿病" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.diabetes" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="既往肿瘤病史" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.history_of_cancer" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px" placeholder="若有,请注明肿瘤类型"></el-input>
-          </el-form-item>
-          <el-form-item label="系统疾病" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.systemic_diseases" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-
-          <el-form-item label="家族史" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.family_history" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="抗病毒治疗" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.antiviral_therapy" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="术前肿瘤治疗情况" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.preoperative_tumor_treatment" type="textarea" :autosize="{ minRows: 4, maxRows: 5}" maxlength="100" show-word-limit style="width:195px" placeholder="射频、TACE等"></el-input>
-          </el-form-item>
-          <el-form-item label="高血脂" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.blood_lipids" type="textarea" :autosize="{ minRows: 4, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="生化指标" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.biochemical_indicators" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="淋巴细胞" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.lymphocyte" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="中性粒细胞" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.Neutrophils" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="术前AFP" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.after_AEP" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="术前CEA" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.after_CEA" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="术前CA19-9" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.after_CA19_9" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="HBV-DNA" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.HBV_DNA" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="乙肝表面抗原" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.hepatitis_B_surface_antigen" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="表面抗体" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.surface_antibody" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="e抗原" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.E_antigen" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="e抗体" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.E_antibody" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="核心抗体" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.core_antibody" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="吸烟" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.smoking" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-          <el-form-item label="治疗情况" prop="pathological_immunohistochemistry">
-            <el-input v-model="temp.treatment" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-        </el-form>
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">
-          Cancel
-        </el-button>
-        <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">
-          Confirm
-        </el-button>
-      </div>
-
+      <disease-info ref="unfixedthead" :dataForm="temp" :dialogStatus="dialogStatus" @getList="getList" @resetTemp="resetTemp" />
     </el-dialog>
     <el-drawer title="样本信息详情" :with-header="false" :visible.sync="sample_information" direction="rtl" size="60%">
       <!-- <el-container style="padding:0px;"> -->
@@ -404,11 +521,11 @@
 
 <script>
 import {
-  fetchDiseaseList,
-  createDisease,
-  updateDisease,
-  deleteDisease,
-  fetchDisease,
+  fetchList,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  fetchArticle,
   importExcel,
 } from "@/api/disease";
 // import myForm from "@/views/table/inline-edit-table";
@@ -422,6 +539,7 @@ import request from "@/utils/request";
 import MyForms from "../components/MyForms";
 // import DiseaseForm from "./components/DiseaseForm";
 import UploadExcelComponent from "@/components/UploadExcel/index.vue";
+import DiseaseInfo from "../components/DiseaseInfo";
 
 const calendarTypeOptions = [
   { key: "CN", display_name: "China" },
@@ -438,7 +556,7 @@ const calendarTypeKeyValue = calendarTypeOptions.reduce((acc, cur) => {
 
 export default {
   name: "ComplexTable",
-  components: { Pagination, MyForms, UploadExcelComponent },
+  components: { Pagination, MyForms, UploadExcelComponent, DiseaseInfo },
   directives: { waves }, //todo directives
   filters: {
     statusFilter(status) {
@@ -468,6 +586,7 @@ export default {
       list: null,
       total: 0,
       listLoading: true,
+      //搜索字段
       listQuery: {
         page: 1,
         limit: 20,
@@ -484,25 +603,31 @@ export default {
       ],
       statusOptions: ["published", "draft", "deleted"],
       showReviewer: false,
+      //表单字段初始值
       temp: {
-        id: 0,
-        collected_date: new Date(),
+        id: "",
         age: "",
-        disease_type: "",
-        type: "",
-        TNM: "",
-        period: "",
-        pathological_immunohistochemistry: "",
-        operation_date: "",
         pathological_information: "",
+        process: "",
         Typing: "",
+        Class: "",
+        pathological_immunohistochemistry: "",
+        tnm: "",
+        period: "",
+        period: "",
+        operationed: "",
+        collected_date: "",
+        operation_date: "",
+        preoperative_tumor_treatment: "",
+        disease_type: "",
+        disease_type: "",
         hypertension: "",
         diabetes: "",
+        smoking: "",
         history_of_cancer: "",
         systemic_diseases: "",
         family_history: "",
         antiviral_therapy: "",
-        preoperative_tumor_treatment: "",
         blood_lipids: "",
         biochemical_indicators: "",
         lymphocyte: "",
@@ -516,9 +641,53 @@ export default {
         E_antigen: "",
         E_antibody: "",
         core_antibody: "",
-        smoking: "",
+        hcv: "",
+        HCV_Ab: "",
+        HCV_RNA: "",
+        thyroid: "",
+        total_bilirubin: "",
+        albumin: "",
+        prothrombin_time: "",
+        hepatic_encephalopathy: "",
+        ascites: "",
+        Child_Pugh: "",
+        Postoperative_chemotherapy: "",
+        Recurrence_time: "",
+        Targeted_drug_therapy: "",
+        internal: "",
+        Radiofrequency_therapy: "",
+        surgical_treatment: "",
+        Time_of_death: "",
+        Postoperative_abnormalities: "",
+        survival_time: "",
+        Preoperative_colonoscopy: "",
+        Colonoscopy_pathology: "",
+        Liver_metastasis: "",
+        number: "",
+        max_diameter: "",
+        diameter: "",
+        sub_stove: "",
+        Macroscopic_tumor_thrombus: "",
+        Location_of_tumor_thrombus: "",
+        envelope: "",
+        necrosis: "",
+        Extrahepatic_nvasion: "",
+        Capsule_breakthrough: "",
+        Multifocal_growth_under_microscope: "",
+        Mirror_sub_stove: "",
+        Microvascular_tumor_thrombus: "",
+        cirrhosis: "",
+        hepatitis: "",
+        BCLC: "",
+        UICC: "",
+        Postoperative_TACE: "",
+        Antiviral_therapy_after_operation: "",
+        PSA: "",
+        Lauren_classification: "",
+        remarks: "",
         treatment: "",
         timestamp: "",
+        deleted: "",
       },
       dialogFormVisible: false,
       dialogExcelVisible: false,
@@ -546,8 +715,9 @@ export default {
   },
   methods: {
     getList() {
+      this.dialogFormVisible = false;
       this.listLoading = true;
-      fetchDiseaseList(this.listQuery).then((response) => {
+      fetchList(this.listQuery).then((response) => {
         this.list = response.data.items;
         this.total = response.data.total;
 
@@ -637,14 +807,14 @@ export default {
       this.dialogStatus = "create";
       this.dialogFormVisible = true;
       this.$nextTick(() => {
-        this.$refs["dataForm"].clearValidate();
+        this.$refs.unfixedthead.reset();
       });
     },
     createData() {
       // this.$refs["dataForm"].validate((valid) => {
       //   console.log("dsadsa", valid);
       //   if (valid) {
-      createDisease(this.temp).then(() => {
+      createArticle(this.temp).then(() => {
         this.list.unshift(this.temp);
         this.dialogFormVisible = false;
         this.$notify({
@@ -673,7 +843,7 @@ export default {
       this.dialogStatus = "update";
       this.dialogFormVisible = true;
       this.$nextTick(() => {
-        this.$refs["dataForm"].clearValidate();
+        this.$refs.unfixedthead.refreshValue();
       });
     },
     updateData() {
@@ -683,7 +853,7 @@ export default {
 
       tempData.timestamp = new Date(); // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
       // console.log("时间", tempData.timestamp, this.temp.timestamp);
-      updateDisease(tempData).then(() => {
+      updateArticle(tempData).then(() => {
         const index = this.list.findIndex((v) => v.id === this.temp.id);
         this.list.splice(index, 1, this.temp);
         this.dialogFormVisible = false;
@@ -712,7 +882,7 @@ export default {
       }).then((result) => {
         if (result.value) {
           // const path = `/vue-element-admin/sequences/delete/${row.sequence_id}`;
-          deleteDisease(row.id)
+          deleteArticle(row.id)
             .then((response) => {
               // handle success
               // this.$swal(
@@ -741,9 +911,9 @@ export default {
               });
             });
         } else {
-          // this.$swal("Cancelled", "The post is safe :)", "error");
+          // this.$swal("取消led", "The post is safe :)", "error");
           this.$notify({
-            title: "Canceled",
+            title: "取消",
             message: "Delete canceled",
             type: "warning",
             duration: 2000,

@@ -22,7 +22,7 @@ import {
   updateArticle,
   deleteArticle,
   fetchArticle,
-} from "@/api/article";
+} from "@/api/result";
 export default {
   props: ["dialogStatus", "dataForm"],
   data() {
@@ -40,11 +40,11 @@ export default {
         },
       },
       rule: [
-        // {
-        //   type: "hidden",
-        //   field: "id",
-        //   value: this.dataForm.id,
-        // },
+        {
+          type: "hidden",
+          field: "id",
+          value: this.dataForm.id,
+        },
         {
           type: "InputNumber",
           title: "Sequence ID",
@@ -65,84 +65,128 @@ export default {
         },
         {
           type: "input",
-          title: "GaoLab ID",
-          field: "gao_lab_id",
-          value: this.dataForm.gao_lab_id,
+          title: "测序批次",
+          field: "batch",
+          value: this.dataForm.batch,
           col: {
-            span: 20,
+            span: 12,
           },
         },
         {
           type: "input",
-          title: "Sample ID",
-          field: "sample_id",
-          value: this.dataForm.sample_id,
+          title: "NAME",
+          field: "name_1",
+          value: this.dataForm.name_1,
           col: {
-            span: 20,
+            span: 12,
           },
         },
         {
-          type: "DatePicker",
-          title: "采样日期",
-          field: "collected_date",
-          value: this.dataForm.collected_date,
+          type: "InputNumber",
+          title: "Input",
+          field: "data_quality_input",
+          value: this.dataForm.data_quality_input,
           props: {
-            type: "date",
-            format: "yyyy-MM-dd",
-            placeholder: "请选择采样日期",
-            defaultValue: new Date(),
+            precision: 0,
+            controls: false,
+            // placeholder: "请输入测序编号",
+            // disabled: true,
           },
           col: {
-            span: 20,
-            // offset: 1,
+            span: 12,
           },
         },
         {
-          type: "DatePicker",
-          title: "抽血日期",
-          field: "blood_date",
-          value: this.dataForm.blood_date,
+          type: "InputNumber",
+          title: "bam",
+          field: "data_quality_bam",
+          value: this.dataForm.data_quality_bam,
           props: {
-            type: "date",
-            format: "yyyy-MM-dd",
-            placeholder: "请选择抽血日期",
-            defaultValue: new Date(),
+            precision: 0,
+            controls: false,
+            // placeholder: "请输入测序编号",
+            // disabled: true,
           },
           col: {
-            span: 20,
-            // offset: 1,
+            span: 12,
           },
         },
         {
-          type: "input",
-          title: "样品来源",
-          field: "sample_origin",
-          value: this.dataForm.sample_origin,
-          col: {
-            span: 20,
-          },
-        },
-        {
-          type: "input",
-          title: "疾病类型",
-          field: "disease_type",
-          value: this.dataForm.disease_type,
-          col: {
-            span: 20,
-          },
-        },
-        {
-          type: "input",
-          title: "实验特殊操作备注",
-          field: "introduction",
-          value: this.dataForm.introduction,
+          type: "InputNumber",
+          title: "bam/Input(%)",
+          field: "data_quality_bam_input",
+          value: this.dataForm.data_quality_bam_input,
           props: {
-            type: "textarea",
-            maxlength: 255,
-            "show-word-limit": true,
+            precision: 0,
+            controls: false,
+            precision: 2,
+            // placeholder: "请输入测序编号",
+            // disabled: true,
           },
           col: {
-            span: 20,
+            span: 12,
+          },
+        },
+        {
+          type: "InputNumber",
+          title: "uniq.bam",
+          field: "data_Quality_uniq_bam",
+          value: this.dataForm.data_Quality_uniq_bam,
+          props: {
+            precision: 0,
+            controls: false,
+            // placeholder: "请输入测序编号",
+            // disabled: true,
+          },
+          col: {
+            span: 12,
+          },
+        },
+        {
+          type: "InputNumber",
+          title: "uniq.nodup.bam",
+          field: "data_Quality_uniq_nodup_bam",
+          value: this.dataForm.data_Quality_uniq_nodup_bam,
+          props: {
+            precision: 0,
+            controls: false,
+            // placeholder: "请输入测序编号",
+            // disabled: true,
+          },
+          col: {
+            span: 12,
+          },
+        },
+        {
+          type: "InputNumber",
+          title: "uniq/Input(%)",
+          field: "data_Quality_uniq_nodup_bam_input",
+          value: this.dataForm.data_Quality_uniq_nodup_bam_input,
+          props: {
+            precision: 0,
+            controls: false,
+            precision: 2,
+            // placeholder: "请输入测序编号",
+            // disabled: true,
+          },
+          col: {
+            span: 12,
+          },
+        },
+        {
+          type: "InputNumber",
+          title: "Coverage(%)",
+          field: "coverage",
+          value: this.dataForm.coverage,
+          props: {
+            precision: 0,
+            controls: false,
+            precision: 2,
+            // placeholder: "请输入测序编号",
+            // disabled: true,
+          },
+          col: {
+            span: 12,
           },
         },
       ],
@@ -166,15 +210,17 @@ export default {
       console.log("初始化表单", $f);
       // this.$emit("resetTemp");
       var temp = {
-        // id: 0,
-        collected_date: new Date(),
-        blood_date: new Date(),
-        sample_id: "",
-        gao_lab_id: "",
-        introduction: "",
-        sample_origin: "",
+        id: 0,
+        name_1: "",
+        data_quality_input: "",
+        data_quality_bam: "",
+        data_quality_bam_input: "",
+        data_Quality_uniq_bam: "",
+        data_Quality_uniq_nodup_bam: "",
+        data_Quality_uniq_nodup_bam_input: "",
+        coverage: "",
         sequence_id: "",
-        disease_type: "",
+        batch: "",
       };
       $f.setValue(temp);
       $f.refresh(true); //清空组件缓存
@@ -236,3 +282,10 @@ export default {
   },
 };
 </script>
+<style scoped>
+.el-input__inner {
+  height: 36px;
+  line-height: 36px;
+  width: 100px;
+}
+</style>

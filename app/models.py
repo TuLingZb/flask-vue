@@ -409,6 +409,7 @@ class PatientBasicInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
     date = db.Column(db.Date,comment='出生日期',nullable=True)
     address = db.Column(db.String(255),comment='家庭住址')
     sample_origin = db.Column(db.String(255), comment='样品来源')
+    phone = db.Column(db.String(255), comment='联系方式')
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     # 反向引用，直接查询出当前病人的病史; 同时，DiseaseInformation实例中会有 patient_name 属性
     # cascade 用于级联删除，病人时，该patient下面的所有diseases_history都会被级联删除
@@ -458,23 +459,28 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
     '''样本疾病信息表'''
     __tablename__ = 'diseases'
     id = db.Column(db.Integer, primary_key=True)
-    collected_date = db.Column(db.Date,comment='抽血日期')
     age = db.Column(db.Integer, comment='就诊年龄')
-    disease_type = db.Column(db.String(255),comment='疾病类型')
-    type = db.Column(db.String(255),comment='类型')
+    pathological_information = db.Column(db.Text,comment='病理完整信息')
+    process = db.Column(db.Text,comment='进展')
+    Typing = db.Column(db.String(255),comment='分型')
+    Class = db.Column(db.String(255),comment='分级')
+    pathological_immunohistochemistry = db.Column(db.String(255),comment='病理免疫组化')
     tnm = db.Column(db.String(255),comment='TNM')
     period = db.Column(db.String(255),comment='分期')
-    pathological_immunohistochemistry = db.Column(db.String(255),comment='病理免疫组化')
-    operation_date = db.Column(db.String(255),comment='术前术后')
-    pathological_information = db.Column(db.String(255),comment='病理完整信息')
-    Typing = db.Column(db.String(255),comment='分型')
+    Subtype = db.Column(db.String(255),comment='亚型/部位')
+    operationed = db.Column(db.String(255),comment='术前术后')
+    collected_date = db.Column(db.Date,comment='抽血日期')
+    operation_date = db.Column(db.Date,comment='手术日期')
+    preoperative_tumor_treatment = db.Column(db.String(255),comment='术前肿瘤治疗情况（射频、TACE等）')
+    Chief_complaint = db.Column(db.String(255),comment='主诉')
+    drinking = db.Column(db.String(255),comment='饮酒（包括频度、种类、量）')
     hypertension = db.Column(db.String(255),comment='高血压')
     diabetes = db.Column(db.String(255),comment='糖尿病')
+    smoking = db.Column(db.String(255),comment='吸烟史')
     history_of_cancer = db.Column(db.String(255),comment='既往肿瘤病史(若有，注明肿瘤类型)')
     systemic_diseases = db.Column(db.String(255),comment='系统疾病')
     family_history = db.Column(db.String(255),comment='家族史')
     antiviral_therapy = db.Column(db.String(255),comment='抗病毒治疗')
-    preoperative_tumor_treatment = db.Column(db.String(255),comment='术前肿瘤治疗情况（射频、TACE等）')
     blood_lipids  = db.Column(db.String(255),comment='高血脂(TC、TG、LDL-C、HDL-C)')
     biochemical_indicators = db.Column(db.String(255),comment='生化指标')
     lymphocyte = db.Column(db.String(255),comment='淋巴细胞')
@@ -488,8 +494,50 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
     E_antigen = db.Column(db.String(255),comment='e抗原')
     E_antibody = db.Column(db.String(255),comment='e抗体')
     core_antibody = db.Column(db.String(255),comment='核心抗体')
-    smoking = db.Column(db.String(255),comment='吸烟')
-    treatment = db.Column(db.Text,comment='治疗情况')
+    hcv = db.Column(db.String(255),comment='丙肝')
+    HCV_Ab = db.Column(db.String(255),comment='HCV-Ab')
+    HCV_RNA = db.Column(db.String(255),comment='HCV-RNA')
+    thyroid = db.Column(db.String(255),comment='甲状腺+')
+    total_bilirubin = db.Column(db.String(255),comment='总胆红素')
+    albumin = db.Column(db.String(255),comment='白蛋白')
+    prothrombin_time = db.Column(db.String(255),comment='凝血酶原时间')
+    hepatic_encephalopathy = db.Column(db.String(255),comment='肝性脑病')
+    ascites = db.Column(db.String(255),comment='腹水')
+    Child_Pugh = db.Column(db.String(255),comment='Child-Pugh')
+    Postoperative_chemotherapy = db.Column(db.String(255),comment='术后化疗')
+    Recurrence_time = db.Column(db.String(255),comment='发现复发时间')
+    Targeted_drug_therapy = db.Column(db.String(255),comment='靶向药物治疗（注明药物）')
+    internal = db.Column(db.String(255),comment='体内放疗（放射性粒子植入）')
+    Radiofrequency_therapy = db.Column(db.String(255),comment='射频治疗')
+    surgical_treatment = db.Column(db.String(255),comment='手术治疗')
+    Time_of_death = db.Column(db.String(255),comment='死亡时间')
+    Postoperative_abnormalities = db.Column(db.String(255),comment='术后异常')
+    survival_time = db.Column(db.String(255),comment='存活时间（M）')
+    Preoperative_colonoscopy = db.Column(db.String(255),comment='术前肠镜')
+    Colonoscopy_pathology = db.Column(db.String(255),comment='肠镜病理')
+    Liver_metastasis = db.Column(db.String(255),comment='肝转移')
+    number = db.Column(db.String(255),comment='个数')
+    max_diameter = db.Column(db.String(255),comment='最大径（最大径和）（mm）')
+    diameter = db.Column(db.String(255),comment='大小（mm）')
+    sub_stove = db.Column(db.String(255),comment='子灶')
+    Macroscopic_tumor_thrombus = db.Column(db.String(255),comment='肉眼癌栓')
+    Location_of_tumor_thrombus = db.Column(db.String(255),comment='癌栓位置')
+    envelope = db.Column(db.String(255),comment='包膜')
+    necrosis = db.Column(db.String(255),comment='坏死')
+    Extrahepatic_nvasion = db.Column(db.String(255),comment='肝外侵犯（写明部位）')
+    Capsule_breakthrough = db.Column(db.String(255),comment='镜下包膜有无突破')
+    Multifocal_growth_under_microscope = db.Column(db.String(255),comment='镜下多灶性生长')
+    Mirror_sub_stove = db.Column(db.String(255),comment='镜下子灶')
+    Microvascular_tumor_thrombus = db.Column(db.String(255),comment='微血管癌栓')
+    cirrhosis = db.Column(db.String(255),comment='肝硬化')
+    hepatitis = db.Column(db.String(255),comment='肝炎')
+    BCLC = db.Column(db.String(255),comment='BCLC')
+    UICC = db.Column(db.String(255),comment='UICC')
+    Postoperative_TACE = db.Column(db.String(255),comment='术后TACE（注明治疗次数）')
+    Antiviral_therapy_after_operation = db.Column(db.String(255),comment='术后抗病毒治疗（注明药物）')
+    PSA = db.Column(db.String(255),comment='PSA')
+    Lauren_classification = db.Column(db.String(255),comment='Lauren分类')
+    remarks = db.Column(db.String(255),comment='备注')
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     deleted = db.Column(db.Boolean, default=False)
 
@@ -503,24 +551,29 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
     def to_dict(self):
         data = {
             'id': self.id,
-            'collected_date': self.collected_date,
             'age': self.age,
-            'disease_type': self.disease_type,
-            'type': self.type,
-            'TNM': self.tnm,
-            'period': self.period,
-            'pathological_immunohistochemistry': self.pathological_immunohistochemistry,
-            'operation_date': self.operation_date,
             'pathological_information': self.pathological_information,
+            'process': self.process,
             'Typing': self.Typing,
+            'Class': self.Class,
+            'pathological_immunohistochemistry': self.pathological_immunohistochemistry,
+            'tnm': self.tnm,
+            'period': self.period,
+            'Subtype': self.Subtype,
+            'operationed': self.operationed,
+            'collected_date': self.collected_date,
+            'operation_date': self.operation_date,
+            'preoperative_tumor_treatment': self.preoperative_tumor_treatment,
+            'drinking': self.drinking,
+            'Chief_complaint': self.Chief_complaint,
             'hypertension': self.hypertension,
             'diabetes': self.diabetes,
+            'smoking': self.smoking,
             'history_of_cancer': self.history_of_cancer,
             'systemic_diseases': self.systemic_diseases,
             'family_history': self.family_history,
             'antiviral_therapy': self.antiviral_therapy,
-            'preoperative_tumor_treatment': self.preoperative_tumor_treatment,
-            'blood_lipids': self.blood_lipids,
+            'blood_lipids ': self.blood_lipids,
             'biochemical_indicators': self.biochemical_indicators,
             'lymphocyte': self.lymphocyte,
             'Neutrophils': self.Neutrophils,
@@ -533,8 +586,51 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             'E_antigen': self.E_antigen,
             'E_antibody': self.E_antibody,
             'core_antibody': self.core_antibody,
-            'smoking': self.smoking,
-            'treatment': self.treatment,
+            'hcv': self.hcv,
+            'HCV_Ab': self.HCV_Ab,
+            'HCV_RNA': self.HCV_RNA,
+            'thyroid': self.thyroid,
+            'total_bilirubin': self.total_bilirubin,
+            'albumin': self.albumin,
+            'prothrombin_time': self.prothrombin_time,
+            'hepatic_encephalopathy': self.hepatic_encephalopathy,
+            'ascites': self.ascites,
+            'Child_Pugh': self.Child_Pugh,
+            'Postoperative_chemotherapy': self.Postoperative_chemotherapy,
+            'Recurrence_time': self.Recurrence_time,
+            'Targeted_drug_therapy': self.Targeted_drug_therapy,
+            'internal': self.internal,
+            'Radiofrequency_therapy': self.Radiofrequency_therapy,
+            'surgical_treatment': self.surgical_treatment,
+            'Time_of_death': self.Time_of_death,
+            'Postoperative_abnormalities': self.Postoperative_abnormalities,
+            'survival_time': self.survival_time,
+            'Preoperative_colonoscopy': self.Preoperative_colonoscopy,
+            'Colonoscopy_pathology': self.Colonoscopy_pathology,
+            'Liver_metastasis': self.Liver_metastasis,
+            'number': self.number,
+            'max_diameter': self.max_diameter,
+            'diameter': self.diameter,
+            'sub_stove': self.sub_stove,
+            'Macroscopic_tumor_thrombus': self.Macroscopic_tumor_thrombus,
+            'Location_of_tumor_thrombus': self.Location_of_tumor_thrombus,
+            'envelope': self.envelope,
+            'necrosis': self.necrosis,
+            'Extrahepatic_nvasion': self.Extrahepatic_nvasion,
+            'Capsule_breakthrough': self.Capsule_breakthrough,
+            'Multifocal_growth_under_microscope': self.Multifocal_growth_under_microscope,
+            'Mirror_sub_stove': self.Mirror_sub_stove,
+            'Microvascular_tumor_thrombus': self.Microvascular_tumor_thrombus,
+            'cirrhosis': self.cirrhosis,
+            'hepatitis': self.hepatitis,
+            'BCLC': self.BCLC,
+            'UICC': self.UICC,
+            'Postoperative_TACE': self.Postoperative_TACE,
+            'Antiviral_therapy_after_operation': self.Antiviral_therapy_after_operation,
+            'PSA': self.PSA,
+            'Lauren_classification': self.Lauren_classification,
+            'remarks': self.remarks,
+            'deleted': self.deleted,
             'patient_id': self.patient_id,
             'timestamp':self.timestamp,
             'sequences': [sequence.sequence_id for sequence in self.sequences],
@@ -542,72 +638,99 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
                 'self': url_for('api.get_role', id=self.id)
             }
         }
-        # if self.patient_info:
-        #     data['patient'] = {
-        #         'id': self.patient_info.id,
-        #         'name': self.patient_info.name,
-        #         'case_number': self.patient_info.case_number,
-        #         'sex': self.patient_info.sex,
-        #         'date': self.patient_info.date,
-        #         'address': self.patient_info.address,
-        #     }
-        # if self.sequences:
-        #     data['sequences'] = [
-        #         {
-        #             sequence.sequence_id,
-        #             sequence.batch,
-        #             sequence.id,
-        #             sequence.gao_lab_id,
-        #             sequence.introduction,
-        #             sequence.sample_origin,
-        #             sequence.collected_date,
-        #             sequence.timestamp,
-        #             sequence.deleted,
-        #         }
-        #         for sequence in self.sequences
-        #     ]
         return data
 
     def from_dict(self, data,trans=False):
-        column_list = ['collected_date','age','disease_type','type','TNM','period','pathological_immunohistochemistry','operation_date','pathological_information','Typing','hypertension','diabetes','history_of_cancer','systemic_diseases','family_history','antiviral_therapy','preoperative_tumor_treatment','blood_lipids','biochemical_indicators','lymphocyte','Neutrophils','after_AEP','after_CEA','after_CA19_9','HBV_DNA','hepatitis_B_surface_antigen','surface_antibody','E_antigen','E_antibody','core_antibody','smoking','treatment','patient_id','timestamp','patient_id',]
+        column_list = ['id','age','pathological_information','process','Typing','Class','pathological_immunohistochemistry','tnm','period','period','operationed','collected_date','operation_date','preoperative_tumor_treatment','Chief_complaint','drinking','hypertension','diabetes','smoking','history_of_cancer','systemic_diseases','family_history','antiviral_therapy','blood_lipids ','biochemical_indicators','lymphocyte','Neutrophils','after_AEP','after_CEA','after_CA19_9','HBV_DNA','hepatitis_B_surface_antigen','surface_antibody','E_antigen','E_antibody','core_antibody','hcv','HCV_Ab','HCV_RNA','thyroid','total_bilirubin','albumin','prothrombin_time','hepatic_encephalopathy','ascites','Child_Pugh','Postoperative_chemotherapy','Recurrence_time','Targeted_drug_therapy','internal','Radiofrequency_therapy','surgical_treatment','Time_of_death','Postoperative_abnormalities','survival_time','Preoperative_colonoscopy','Colonoscopy_pathology','Liver_metastasis','number','max_diameter','diameter','sub_stove','Macroscopic_tumor_thrombus','Location_of_tumor_thrombus','envelope','necrosis','Extrahepatic_nvasion','Capsule_breakthrough','Multifocal_growth_under_microscope','Mirror_sub_stove','Microvascular_tumor_thrombus','cirrhosis','hepatitis','BCLC','UICC','Postoperative_TACE','Antiviral_therapy_after_operation','PSA','Lauren_classification','remarks','treatment','timestamp','deleted',]
         if trans:
-            column_list = {'取样日期': 'collected_date',
-                           '就诊年龄': 'age',
-                           '疾病类型': 'disease_type',
-                           '类型': 'type',
-                           'TNM': 'tnm ',
-                           '分期': 'period',
-                           '病理免疫组化': 'pathological_immunohistochemistry',
-                           '术前术后': 'operation_date',
-                           '病理完整信息': 'pathological_information',
-                           '分型': 'Typing', '高血压': 'hypertension',
-                           '糖尿病': 'diabetes',
-                           '既往肿瘤病史(若有，注明肿瘤类型）': 'history_of_cancer',
-                           '系统疾病': 'systemic_diseases', '家族史': 'family_history',
-                           '抗病毒治疗': 'antiviral_therapy',
-                           '术前肿瘤治疗情况（射频、TACE等）': 'preoperative_tumor_treatment',
-                           '高血脂(TC、TG、LDL-C、HDL-C)': 'blood_lipids',
-                           '生化指标': 'biochemical_indicators',
-                           '淋巴细胞': 'lymphocyte',
-                           '中性粒细胞': 'Neutrophils',
-                           '术前AFP': 'after_AEP',
-                           '术前CEA': 'after_CEA',
-                           '术前CA19-9': 'after_CA19_9',
-                           'HBV-DNA': 'HBV_DNA',
-                           '乙肝表面抗原': 'hepatitis_B_surface_antigen',
-                           '表面抗体': 'surface_antibody',
-                           'e抗原': 'E_antigen',
-                           'e抗体': 'E_antibody',
-                           '核心抗体': 'core_antibody',
-                           '吸烟': 'smoking',
-                           '治疗情况': 'treatment'}
+            column_list = {
+                '就诊年龄': 'age',
+                '病理完整信息': 'pathological_information',
+                '进展': 'process',
+                '分型': 'Typing',
+                '分级': 'Class',
+                '病理免疫组化': 'pathological_immunohistochemistry',
+                'TNM': 'tnm',
+                '分期': 'period',
+                '亚型/部位': 'Subtype',
+                '术前术后': 'operationed',
+                '抽血日期': 'collected_date',
+                '手术日期': 'operation_date',
+                '术前肿瘤治疗情况（射频、TACE等）': 'preoperative_tumor_treatment',
+                '主诉': 'Chief_complaint',
+                '饮酒（包括频度、种类、量）': 'drinking',
+                '高血压': 'hypertension',
+                '糖尿病': 'diabetes',
+                '吸烟史': 'smoking',
+                '既往肿瘤病史(若有，注明肿瘤类型)': 'history_of_cancer',
+                '系统疾病': 'systemic_diseases',
+                '家族史': 'family_history',
+                '抗病毒治疗': 'antiviral_therapy',
+                '高血脂(TC、TG、LDL-C、HDL-C)': 'blood_lipids ',
+                '生化指标': 'biochemical_indicators',
+                '淋巴细胞': 'lymphocyte',
+                '中性粒细胞': 'Neutrophils',
+                '术前AFP': 'after_AEP',
+                '术前CEA': 'after_CEA',
+                '术前CA19-9': 'after_CA19_9',
+                'HBV-DNA': 'HBV_DNA',
+                '乙肝表面抗原': 'hepatitis_B_surface_antigen',
+                '表面抗体': 'surface_antibody',
+                'e抗原': 'E_antigen',
+                'e抗体': 'E_antibody',
+                '核心抗体': 'core_antibody',
+                '丙肝': 'hcv',
+                'HCV-Ab': 'HCV_Ab',
+                'HCV-RNA': 'HCV_RNA',
+                '甲状腺+': 'thyroid',
+                '总胆红素': 'total_bilirubin',
+                '白蛋白': 'albumin',
+                '凝血酶原时间': 'prothrombin_time',
+                '肝性脑病': 'hepatic_encephalopathy',
+                '腹水': 'ascites',
+                'Child-Pugh': 'Child_Pugh',
+                '术后化疗': 'Postoperative_chemotherapy',
+                '发现复发时间': 'Recurrence_time',
+                '靶向药物治疗（注明药物）': 'Targeted_drug_therapy',
+                '体内放疗（放射性粒子植入）': 'internal',
+                '射频治疗': 'Radiofrequency_therapy',
+                '手术治疗': 'surgical_treatment',
+                '死亡时间': 'Time_of_death',
+                '术后异常': 'Postoperative_abnormalities',
+                '存活时间（M）': 'survival_time',
+                '术前肠镜': 'Preoperative_colonoscopy',
+                '肠镜病理': 'Colonoscopy_pathology',
+                '肝转移': 'Liver_metastasis',
+                '个数': 'number',
+                '最大径（最大径和）（mm）': 'max_diameter',
+                '大小（mm）': 'diameter',
+                '子灶': 'sub_stove',
+                '肉眼癌栓': 'Macroscopic_tumor_thrombus',
+                '癌栓位置': 'Location_of_tumor_thrombus',
+                '包膜': 'envelope',
+                '坏死': 'necrosis',
+                '肝外侵犯（写明部位）': 'Extrahepatic_nvasion',
+                '镜下包膜有无突破': 'Capsule_breakthrough',
+                '镜下多灶性生长': 'Multifocal_growth_under_microscope',
+                '镜下子灶': 'Mirror_sub_stove',
+                '微血管癌栓': 'Microvascular_tumor_thrombus',
+                '肝硬化': 'cirrhosis',
+                '肝炎': 'hepatitis',
+                'BCLC': 'BCLC',
+                'UICC': 'UICC',
+                '术后TACE（注明治疗次数）': 'Postoperative_TACE',
+                '术后抗病毒治疗（注明药物）': 'Antiviral_therapy_after_operation',
+                'PSA': 'PSA',
+                'Lauren分类': 'Lauren_classification',
+                '备注': 'remarks',
+            }
         for field in column_list:
             if not trans and field in data:
-                if field in ['timestamp', 'collected_date']:
+                if field in ['timestamp', 'collected_date','Time_of_death','operation_date','prothrombin_time','Recurrence_time','survival_time']:
                     data[field] = transfor_dateformat(str(data[field]))
                 setattr(self, field, data[field])
             elif trans and field in data:
-                if column_list[field] in ['timestamp', 'collected_date']:
+                if column_list[field] in ['timestamp', 'collected_date','Time_of_death','operation_date','prothrombin_time','Recurrence_time','survival_time']:
                     data[field] = transfor_dateformat(str(data[field]))
                 setattr(self, column_list[field], data[field])
 
@@ -627,11 +750,13 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
     __searchable__ = [('title', True), ('summary', True), ('body', False)]
     sequence_id = db.Column(db.Integer, primary_key=True)
     # batch = db.Column(db.String(255),comment='测序批次')
+    disease_type = db.Column(db.String(255), comment='疾病类型')
     sample_id = db.Column(db.String(255),comment='样本id')
     gao_lab_id = db.Column(db.String(255),comment='gao_lab_id')
     introduction = db.Column(db.Text)
     sample_origin = db.Column(db.String(255),comment='样品来源')
     collected_date = db.Column(db.DATE,comment='采样日期')
+    blood_date = db.Column(db.DATE,comment='抽血日期')
     special_operation = db.Column(db.String(255),comment='实验特殊操作备注（样本过滤、浓缩、建库…)')
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     deleted = db.Column(db.Boolean, default=False)
@@ -669,6 +794,7 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
             'author_id': self.author_id,
             'disease_id': self.disease_id,
             # 'result_id': [result.id for result in self.results],
+            'disease_type':self.disease_type,
             'results':{},
             'author': {},
             'disease':{},
@@ -751,7 +877,7 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
         return data
 
     def from_dict(self, data,trans=False):
-        column_list = ['special_operation','sequence_id', 'id', 'gao_lab_id', 'introduction','sample_origin','collected_date','timestamp','author_id','disease_id']
+        column_list = ['disease_type','special_operation','sequence_id', 'id', 'gao_lab_id', 'introduction','sample_origin','collected_date','timestamp','author_id','disease_id']
 
         if trans:
             column_list = {'实验特殊操作备注（样本过滤、浓缩、建库…)':'special_operation',
@@ -762,6 +888,8 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
                            'Gao lab ID': 'gao_lab_id',
                            'Introduction': 'introduction',
                            '样品来源': 'sample_origin',
+                           '疾病类型':'disease_type',
+                           '抽血日期': 'blood_date',
                            '采样日期': 'collected_date',
                            '收样日期': 'collected_date'}
         for field in column_list:
@@ -770,8 +898,9 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
                     data[field] = transfor_dateformat(str(data[field]))
                 setattr(self, field, data[field])
             elif trans and field in data:
-                if column_list[field] in ['collected_date']:
+                if column_list[field] in ['collected_date','blood_date']:
                     data[field] = transfor_dateformat(str(data[field]))
+                # print(data[field])
                 setattr(self, column_list[field], data[field])
 
     # def is_liked_by(self, user):

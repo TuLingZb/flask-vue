@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-export function fetchDiseaseList(query) {
+export function fetchList(query) {
   return request({
     url: '/vue-element-admin/disease/list',
     method: 'get',
@@ -24,7 +24,7 @@ export function fetchPv(pv) {
   })
 }
 
-export function createDisease(data) {
+export function createArticle(data) {
   return request({
     url: '/vue-element-admin/disease/create',
     method: 'post',
@@ -32,7 +32,7 @@ export function createDisease(data) {
   })
 }
 // 修改表
-export function updateDisease(data) {
+export function updateArticle(data) {
   return request({
     url: '/vue-element-admin/disease/update',
     method: 'put',
@@ -41,7 +41,7 @@ export function updateDisease(data) {
 }
 
 // 删除样本测序表记录
-export function deleteDisease(sequence_id) {
+export function deleteArticle(sequence_id) {
   return request({
     url: `/vue-element-admin/disease/delete/${sequence_id}`,
     method: 'delete',

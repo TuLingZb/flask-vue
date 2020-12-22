@@ -17,22 +17,34 @@ def excel_create_disease():
         return bad_request('excel表内容为空')
 
     sample_data = data['data']
-    print(sample_data)
+    # print(sample_data)
     sample_header = data['header']
     # print(sample_header)
-    for data in sample_data:
-        patient = PatientBasicInformation.query.filter(PatientBasicInformation.name == data['姓名']).filter(PatientBasicInformation.name == data['样品来源']).first() or PatientBasicInformation()
-        patient.from_dict(data, trans=True)
-        disease = DiseaseInformation.query.filter(DiseaseInformation.patient_id == patient.id).filter(DiseaseInformation.disease_type == data["疾病类型"]).first() or DiseaseInformation()
-        disease.from_dict(data,trans=True)
-        disease.patient_id = patient.id
-        sample = SampleSequence.query.get(data['Sequence ID']) or SampleSequence()
-        sample.from_dict(data,trans=True)
-        sample.disease_id = disease.id
-        db.session.add(disease)
-        db.session.add(patient)
-        db.session.add(sample)
-    db.session.commit()
+    n = 1
+    with db.session.no_autoflush:
+        for data in sample_data:
+            n += 1
+            name = data.get('姓名',None)
+            origin = data.get('样品来源',None)
+            if not name or not origin or name == '姓名':
+                continue
+            patient = PatientBasicInformation.query.filter(PatientBasicInformation.name == name).filter(PatientBasicInformation.name == data['样品来源']).first() or PatientBasicInformation()
+            patient.from_dict(data, trans=True)
+            sequence_id = data.get('Sequence ID',None)
+            sequence = SampleSequence.query.get(sequence_id) or SampleSequence()
+            sequence.from_dict(data, trans=True)
+            disease = DiseaseInformation.query.filter(sequence.disease_info.patient_id == patient.id).first() if sequence.disease_info else DiseaseInformation()
+
+            disease.from_dict(data,trans=True)
+            disease.patient_id = patient.id
+            sequence.disease_id = disease.id
+            db.session.add(disease)
+            db.session.add(patient)
+            db.session.add(sequence)
+            if sequence.sequence_id == 'Sequence ID':
+                print('id:',sequence.sequence_id)
+                print(n, data)
+        db.session.commit()
     return restfulResponse({})
 
 @bp.route('/patient/create', methods=['POST'])
@@ -57,10 +69,9 @@ def create_post():
 
     patient = PatientBasicInformation()
     patient.from_dict(data)
-    # patient.author = g.current_user  # 通过 auth.py 中 verify_token() 传递过来的（同一个request中，需要先进行 Token 认证）
     db.session.add(patient)
     db.session.commit()
-    response = jsonify(patient.to_dict())
+    response = restfulResponse(patient.to_dict())
     response.status_code = 201
     # HTTP协议要求201响应包含一个值为新资源URL的Location头部
     response.headers['Location'] = url_for('api.get_patients', id=patient.id)
@@ -73,10 +84,10 @@ def get_patients():
     page = request.args.get('page', 1, type=int)
     per_page = min(
         request.args.get(
-            'per_page', current_app.config['POSTS_PER_PAGE'], type=int), 100)
+            'limit', current_app.config['POSTS_PER_PAGE'], type=int), 100)
     queryMap = []
 
-    queryMap.append(SampleSequence.deleted == False)  # 非删除
+    queryMap.append(PatientBasicInformation.deleted == False)  # 非删除
 
     name = request.args.get('name', None)
     sex = request.args.get('sex', None)
@@ -120,25 +131,27 @@ def get_patient(id):
         data['_links']['prev'] = url_for('api.get_patient', id=prev_basequery.first().id)
     else:
         data['_links']['prev'] = None
-    return jsonify(data)
+    return restfulResponse(data)
 
 
-@bp.route('/patients/update/', methods=['PUT'])
+@bp.route('/patient/update/', methods=['PUT'])
 @token_auth.login_required(role=Config.WRITE)
 def update_post():
     '''修改病人信息'''
+    data = request.get_json()
+    print('sa', data)
+    if not data:
+        return bad_request('You must post JSON data.')
+    id = data.get('id', 0)
     post = PatientBasicInformation.query.get_or_404(id)
     # if g.current_user != post.author and not g.current_user.is_administrator():
     #     return error_response(403)
 
-    data = request.get_json()
-    if not data:
-        return bad_request('You must post JSON data.')
     message = {}
     if 'name' not in data or not data.get('name').strip():
         message['name'] = 'name is required.'
-    if 'date' not in data or not data.get('date').strip():
-        message['date'] = 'date is required.'
+    # if 'date' not in data or not data.get('date').strip():
+    #     message['date'] = 'date is required.'
     if 'sex' not in data or not data.get('sex').strip():
         message['sex'] = 'sex is required.'
     if len(data.get('address')) > 255:
@@ -149,7 +162,7 @@ def update_post():
 
     post.from_dict(data)
     db.session.commit()
-    return jsonify(post.to_dict())
+    return restfulResponse(post.to_dict())
 
 
 @bp.route('/patients/<int:id>', methods=['DELETE'])
@@ -160,7 +173,7 @@ def delete_post(id):
     # if g.current_user != post.author and not g.current_user.is_administrator():
     #     return error_response(403)
     if post.diseases_history is not None:
-        return jsonify({'msg':'此病人还有关联信息尚未清除，不能删除'})
+        return restfulResponse({'msg':'此病人还有关联信息尚未清除，不能删除'})
     db.session.delete(post)
     db.session.commit()
     return '', 204
@@ -233,7 +246,7 @@ def get_disease(id):
         data['_links']['prev'] = url_for('api.get_disease', id=prev_basequery.first().id)
     else:
         data['_links']['prev'] = None
-    return jsonify(data)
+    return restfulResponse(data)
 
 @bp.route('/disease/update', methods=['PUT'])
 @token_auth.login_required(role=Config.WRITE)
@@ -261,7 +274,7 @@ def delete_disease(id):
     # if g.current_user != post.author and not g.current_user.is_administrator():
     #     return error_response(403)
     # if post.sequences is not None:
-    #     return jsonify({'msg':'此疾病还有关联测序信息尚未清除，不能删除'})
+    #     return restfulResponse({'msg':'此疾病还有关联测序信息尚未清除，不能删除'})
     post.deleted = True
     db.session.commit()
     return restfulResponse({})
@@ -278,7 +291,7 @@ def export_posts():
     else:
         # 将 app.utils.tasks.export_posts 放入任务队列中
         g.current_user.launch_task('export_posts', '正在导出文章...', kwargs={'user_id': g.current_user.id})
-        return jsonify(message='正在运行导出文章后台任务')
+        return restfulResponse(message='正在运行导出文章后台任务')
 
 
 ###
@@ -317,7 +330,7 @@ def search():
             'prev': url_for('api.search', q=q, page=page - 1, per_page=per_page) if page > 1 else None
         }
     }
-    return jsonify(data=data, message='Total items: {}, current page: {}'.format(total, page))
+    return restfulResponse(data=data, message='Total items: {}, current page: {}'.format(total, page))
 
 
 @bp.route('/search/post-detail/<int:id>', methods=['GET'])
@@ -351,4 +364,4 @@ def get_search_post(id):
         data['_links']['prev'] = url_for('api.get_post', id=prev_basequery.first().id)
     else:
         data['_links']['prev'] = None
-    return jsonify(data)
+    return restfulResponse(data)

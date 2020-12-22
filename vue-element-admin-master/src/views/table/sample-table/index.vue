@@ -6,16 +6,21 @@
         <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" style="margin-right: 10px;" @click="handleFilter">
           搜索
         </el-button>
-        <el-input v-model="listQuery.sequence_id" placeholder="Sequence ID" style="width: 200px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
-        <el-select v-model="listQuery.importance" placeholder="Imp" clearable style="width: 90px;margin-right: 10px;" class="filter-item">
+        <el-input v-model="listQuery.sequence_id" placeholder="Sequence ID" style="width: 150px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
+        <el-input v-model="listQuery.gao_lab_id" placeholder="GaoLab ID" style="width: 150px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
+        <el-input v-model="listQuery.sample_id" placeholder="Sample ID" style="width: 150px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
+        <el-input v-model="listQuery.introduction" placeholder="说明" style="width: 150px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
+        <el-input v-model="listQuery.sample_origin" placeholder="样品来源" style="width: 150px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
+
+        <el-select v-model="listQuery.importance" placeholder="疾病类型" clearable style="width: 105px;margin-right: 10px;" class="filter-item">
           <el-option v-for="item in importanceOptions" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="listQuery.type" placeholder="Type" clearable class="filter-item" style="width: 130px;margin-right: 10px;">
-          <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" />
-        </el-select>
-        <el-select v-model="listQuery.sort" style="width: 140px;margin-right: 10px;" class="filter-item" @change="handleFilter">
+        <!-- <el-select v-model="listQuery.type" placeholder="Type" clearable class="filter-item" style="width: 130px;margin-right: 10px;">
+          <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" /> -->
+        <!-- </el-select> -->
+        <!-- <el-select v-model="listQuery.sort" style="width: 140px;margin-right: 10px;" class="filter-item" @change="handleFilter">
           <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
-        </el-select>
+        </el-select> -->
       </div>
       <el-divider>
       </el-divider>
@@ -42,9 +47,14 @@
           <span>{{ row.sequence_id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="收样日期" width="150px" align="center">
+      <el-table-column label="采样日期" width="150px" align="center" prop="date1" sortable="custom" :class-name="getSortClass('date1')">
         <template slot-scope="{row}">
           <span>{{ row.collected_date | parseTime('{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="抽血日期" width="150px" align="center" prop="date2" sortable="custom" :class-name="getSortClass('date2')">
+        <template slot-scope="{row}">
+          <span>{{ row.blood_date | parseTime('{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="GaoLabID" width="150px" align="center">
@@ -65,6 +75,11 @@
       <el-table-column label="样品来源" width="150px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.sample_origin }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="疾病类型" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.disease_type }}</span>
         </template>
       </el-table-column>
       <!-- <el-table-column label="Title" min-width="400px" align="center">
@@ -119,50 +134,8 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <div class="form-container">
-        <el-form :inline="true" ref="dataForm" :model="temp" :rules="rules" label-width="110px" class="demo-ruleForm" size="medium">
-          <el-form-item label="测序ID" prop="sequence_id">
-            <el-input v-model.number="temp.sequence_id" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="测序批次" prop="batch">
-            <el-input v-model="temp.batch" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="GaoLabID" prop="gao_lab_id">
-            <el-input v-model="temp.gao_lab_id" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="ID" prop="id">
-            <el-input v-model="temp.id" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="收样日期" prop="collected_date">
-            <el-date-picker v-model="temp.collected_date" type="date" placeholder="Please pick a date" style="width:195px" />
-          </el-form-item>
-          <el-form-item label="样品来源" prop="collected_date">
-            <el-input v-model="temp.sample_origin" maxlength="20" show-word-limit />
-          </el-form-item>
-          <el-form-item label="样本说明" prop="introduction">
-            <el-input v-model="temp.introduction" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" maxlength="100" show-word-limit style="width:195px"></el-input>
-          </el-form-item>
-        </el-form>
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">
-          Cancel
-        </el-button>
-        <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">
-          Confirm
-        </el-button>
-      </div>
-
+      <sample-origin ref="sampleorigin" :dataForm="temp" :dialogStatus="dialogStatus" @getList="getList" @resetTemp="resetTemp" />
     </el-dialog>
-    <!-- <el-dialog :visible.sync="dialogPvVisible" title="Reading statistics">
-      <el-table :data="pvData" border fit highlight-current-row style="width: 100%">
-        <el-table-column prop="key" label="Channel" />
-        <el-table-column prop="pv" label="Pv" />
-      </el-table>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialogPvVisible = false">Confirm</el-button>
-      </span>
-    </el-dialog> -->
     <el-drawer title="样本信息详情" :with-header="false" :visible.sync="sample_information" direction="rtl" size="60%">
       <!-- <el-container style="padding:0px;"> -->
       <el-header style="text-align: left; font-size: 20px;vertical-align:middle">
@@ -218,6 +191,7 @@ import request from "@/utils/request";
 // import FixedTheadCopy from "./dynamic-table/components/FixedTheadCopy";
 import MyForms from "../components/MyForms";
 import UploadExcelComponent from "@/components/UploadExcel/index.vue";
+import SampleOrigin from "../components/SampleOrigin";
 
 const calendarTypeOptions = [
   { key: "CN", display_name: "China" },
@@ -234,7 +208,7 @@ const calendarTypeKeyValue = calendarTypeOptions.reduce((acc, cur) => {
 
 export default {
   name: "ComplexTable",
-  components: { Pagination, MyForms, UploadExcelComponent },
+  components: { Pagination, MyForms, UploadExcelComponent, SampleOrigin },
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -272,6 +246,9 @@ export default {
         limit: 20,
         importance: undefined,
         sequence_id: undefined,
+        gao_lab_id: undefined,
+        introduction: undefined,
+        sample_origin: undefined,
         type: undefined,
         sort: "+id",
       },
@@ -332,6 +309,7 @@ export default {
   },
   methods: {
     getList() {
+      this.dialogFormVisible = false;
       this.listLoading = true;
       fetchList(this.listQuery).then((response) => {
         this.list = response.data.items;
@@ -396,7 +374,7 @@ export default {
       this.dialogStatus = "create";
       this.dialogFormVisible = true;
       this.$nextTick(() => {
-        this.$refs["dataForm"].clearValidate();
+        this.$refs.sampleorigin.reset();
       });
     },
     createData() {
@@ -424,7 +402,7 @@ export default {
       this.dialogStatus = "update";
       this.dialogFormVisible = true;
       this.$nextTick(() => {
-        this.$refs["dataForm"].clearValidate();
+        this.$refs.sampleorigin.refreshValue();
       });
     },
     updateData() {
@@ -492,9 +470,9 @@ export default {
               });
             });
         } else {
-          // this.$swal("Cancelled", "The post is safe :)", "error");
+          // this.$swal("取消led", "The post is safe :)", "error");
           this.$notify({
-            title: "Canceled",
+            title: "取消",
             message: "Delete canceled",
             type: "warning",
             duration: 2000,

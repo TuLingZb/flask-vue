@@ -83,6 +83,7 @@ def excel_create_result():
 def create_sequence():
     '''添加一条新的样本测序信息'''
     data = request.get_json()
+    print(data)
     if not data:
         return bad_request('You must post JSON data.')
     message = {}
@@ -101,7 +102,7 @@ def create_sequence():
     response = restfulResponse(post.to_dict())
     response.status_code = 201
     # HTTP协议要求201响应包含一个值为新资源URL的Location头部
-    response.headers['Location'] = url_for('api.get_sequences', id=post.id)
+    response.headers['Location'] = url_for('api.get_sequences')
     return response
 
 
@@ -118,6 +119,19 @@ def get_sequences():
     queryMap.append(SampleSequence.deleted==False) # 非删除
 
     sequence_id = request.args.get('sequence_id', None, type=int)
+    gao_lab_id = request.args.get('gao_lab_id', None)
+    sample_id = request.args.get('sample_id', None)
+    introduction = request.args.get('introduction', None)
+    sample_origin = request.args.get('sample_origin', None)
+    importance = request.args.get('importance', None) # 疾病类型
+    if sequence_id:
+        queryMap.append(SampleSequence.sequence_id == sequence_id)
+    if gao_lab_id:
+        queryMap.append(SampleSequence.gao_lab_id == gao_lab_id)
+    if sequence_id:
+        queryMap.append(SampleSequence.sequence_id == sequence_id)
+    if sequence_id:
+        queryMap.append(SampleSequence.sequence_id == sequence_id)
     if sequence_id:
         queryMap.append(SampleSequence.sequence_id == sequence_id)
 
@@ -155,16 +169,9 @@ def update_sequence():
         return bad_request('You must post JSON data.')
     print(data)
     id = data.get('sequence_id')
-    post = SampleSequence.query.get_or_404(id)
-    message = {}
-    # if 'title' not in data or not data.get('title').strip():
-    #     message['title'] = 'Title is required.'
-    # elif len(data.get('title')) > 255:
-    #     message['title'] = 'Title must less than 255 characters.'
-    # if 'body' not in data or not data.get('body').strip():
-    #     message['body'] = 'Body is required.'
-    # if message:
-    #     return bad_request(message)
+    post = SampleSequence.query.get(id)
+    if not post:
+        return restfulResponse({},code=4004,msg="测序ID不存在")
 
     post.from_dict(data)
     db.session.commit()
@@ -192,20 +199,21 @@ def create_results():
     data = request.get_json()
     if not data:
         return bad_request('You must post JSON data.')
-    message = {}
-    if 'sequence_id' not in data or not data.get('sequence_id').strip():
-        message['sequence_id'] = 'sequence_id is required.'
-    elif len(data.get('introduction')) > 255:
-        message['introduction'] = 'introduction must less than 255 characters.'
-    if message:
-        return bad_request(message)
-
-    results = SampleSequence()
+    # message = {}
+    # if 'sequence_id' not in data or not data.get('sequence_id'):
+    #     message['sequence_id'] = 'sequence_id is required.'
+    # elif len(data.get('introduction')) > 255:
+    #     message['introduction'] = 'introduction must less than 255 characters.'
+    # if message:
+    #     return bad_request(message)
+    sequence_id = data.get('sequence_id',None)
+    if not SampleSequence.query.get(sequence_id):
+        return bad_request('测序ID不存在')
+    results = SequenceResult()
     results.from_dict(data)
-    results.author = g.current_user  # 通过 auth.py 中 verify_token() 传递过来的（同一个request中，需要先进行 Token 认证）
     db.session.add(results)
     db.session.commit()
-    response = jsonify(results.to_dict())
+    response = restfulResponse(results.to_dict())
     response.status_code = 201
     # HTTP协议要求201响应包含一个值为新资源URL的Location头部
     response.headers['Location'] = url_for('api.get_results', id=results.id)
@@ -267,28 +275,31 @@ def get_result(id):
 
 @bp.route('/result/update/', methods=['PUT'])
 @token_auth.login_required(role=Config.WRITE)
-def update_result(id):
+def update_result():
     '''修改一篇测序信息'''
-    post = SampleSequence.query.get_or_404(id)
-    # if g.current_user != post.author and not g.current_user.can(Permission.ADMIN):
-    #     return error_response(403)
 
     data = request.get_json()
     if not data:
         return bad_request('You must post JSON data.')
-    message = {}
-    if 'title' not in data or not data.get('title').strip():
-        message['title'] = 'Title is required.'
-    elif len(data.get('title')) > 255:
-        message['title'] = 'Title must less than 255 characters.'
-    if 'body' not in data or not data.get('body').strip():
-        message['body'] = 'Body is required.'
-    if message:
-        return bad_request(message)
+    id = data.get("id",None)
+    post = SequenceResult.query.get(id)
+    if not post:
+        return bad_request("信息不存在")
+
+
+    # message = {}
+    # if 'title' not in data or not data.get('title').strip():
+    #     message['title'] = 'Title is required.'
+    # elif len(data.get('title')) > 255:
+    #     message['title'] = 'Title must less than 255 characters.'
+    # if 'body' not in data or not data.get('body').strip():
+    #     message['body'] = 'Body is required.'
+    # if message:
+    #     return bad_request(message)
 
     post.from_dict(data)
     db.session.commit()
-    return jsonify(post.to_dict())
+    return restfulResponse(post.to_dict())
 
 
 @bp.route('/result/detele/<int:id>', methods=['DELETE'])
