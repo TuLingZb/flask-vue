@@ -10,12 +10,7 @@
         <el-select v-model="listQuery.sex" placeholder="性别" clearable style="width: 90px;margin-right: 10px;" class="filter-item">
           <el-option v-for="item in sexOptions" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="listQuery.type" placeholder="Type" clearable class="filter-item" style="width: 130px;margin-right: 10px;">
-          <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" />
-        </el-select>
-        <el-select v-model="listQuery.sort" style="width: 140px;margin-right: 10px;" class="filter-item" @change="handleFilter">
-          <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
-        </el-select>
+        <el-input v-model="listQuery.case_number" placeholder="病历号" style="width: 200px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
       </div>
       <el-divider>
       </el-divider>
@@ -39,12 +34,12 @@
           <span>{{ row.sequence_id }}</span>
         </template>
       </el-table-column> -->
-      <el-table-column v-if="true" label="病人id" width="150px" align="center">
+      <el-table-column v-if="true" label="病人id" width="150px" align="center" prop="id" :sortable="'custom'" :sort-orders="['ascending', 'descending']">
         <template slot-scope="{row}">
           <span>{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="姓名" width="150px" align="center">
+      <el-table-column label="姓名" width="150px" align="center" prop="name" :sortable="'custom'" :sort-orders="['ascending', 'descending']">
         <template slot-scope="{row}">
           <span>{{ row.name }}</span>
         </template>
@@ -229,7 +224,8 @@ export default {
         name: undefined,
         sex: undefined,
         type: undefined,
-        sort: "+id",
+        sort: {},
+        case_number: undefined,
       },
       sexOptions: ["男", "女"],
       calendarTypeOptions,
@@ -320,10 +316,11 @@ export default {
       row.status = status;
     },
     sortChange(data) {
+      if (this.$refs.multipleTable) this.$refs.multipleTable.clearSort();
       const { prop, order } = data;
-      if (prop === "id") {
-        this.sortByID(order);
-      }
+      this.listQuery.sort = {};
+      this.listQuery.sort[prop] = order;
+      this.handleFilter();
     },
     sortByID(order) {
       if (order === "ascending") {

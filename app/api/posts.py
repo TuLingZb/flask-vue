@@ -6,6 +6,7 @@ from app.extensions import db
 from app.models import Permission, SampleSequence,SequenceResult
 from config import Config
 from app.utils.my_response import restfulResponse
+import json
 
 @bp.route('/sequence/search', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
@@ -127,21 +128,36 @@ def get_sequences():
     if sequence_id:
         queryMap.append(SampleSequence.sequence_id == sequence_id)
     if gao_lab_id:
-        queryMap.append(SampleSequence.gao_lab_id == gao_lab_id)
-    if sequence_id:
-        queryMap.append(SampleSequence.sequence_id == sequence_id)
-    if sequence_id:
-        queryMap.append(SampleSequence.sequence_id == sequence_id)
-    if sequence_id:
-        queryMap.append(SampleSequence.sequence_id == sequence_id)
+        queryMap.append(SampleSequence.gao_lab_id.like('%{gao_lab_id}%'.format(gao_lab_id=gao_lab_id)))
+    if sample_id:
+        queryMap.append(SampleSequence.sample_id == sample_id)
+    if introduction:
+        queryMap.append(SampleSequence.introduction.like('%{introduction}%'.format(introduction=introduction)))
+    if importance:
+        queryMap.append(SampleSequence.disease_type == importance)
+
+    if sample_origin:
+        queryMap.append(SampleSequence.sample_origin.like('%{sample_origin}%'.format(sample_origin=sample_origin)))
 
     querySort = []
-    sort = request.args.get('sort', '+id')
-    if sort == "+id":
-        querySort.append(SampleSequence.sequence_id.asc())
-    else:
-        querySort.append(SampleSequence.sequence_id.desc())
-
+    sort = json.loads(request.args.get('sort',{}))
+    if sort.get('sequence_id',None):
+        if sort['sequence_id'] == "ascending":
+            querySort.append(SampleSequence.sequence_id.asc())
+        elif sort['sequence_id'] == "descending":
+            querySort.append(SampleSequence.sequence_id.desc())
+    if sort.get('collected_date',None):
+        if sort['collected_date'] == "ascending":
+            querySort.append(SampleSequence.collected_date.asc())
+        elif sort['collected_date'] == "descending":
+            querySort.append(SampleSequence.collected_date.desc())
+    if sort.get('blood_date',None):
+        if sort['blood_date'] == "ascending":
+            querySort.append(SampleSequence.blood_date.asc())
+        elif sort['blood_date'] == "descending":
+            querySort.append(SampleSequence.blood_date.desc())
+    print(queryMap)
+    print(querySort)
     data = SampleSequence.to_collection_dict(
         SampleSequence.query.filter(*queryMap).order_by(*querySort), page, per_page,
         'api.get_sequences')
@@ -232,9 +248,14 @@ def get_results():
     queryMap = []
 
     sequence_id = request.args.get('sequence_id', None, type=int)
+    batch = request.args.get('batch', None)
+    name_1 = request.args.get('name_1', None)
     if sequence_id:
         queryMap.append(SequenceResult.sequence_id == sequence_id)
-    # if
+    if batch:
+        queryMap.append(SequenceResult.batch == batch)
+    if name_1:
+        queryMap.append(SequenceResult.name_1 == name_1)
     querySort = []
     sort = request.args.get('sort', '+id')
     if sort == "+id":

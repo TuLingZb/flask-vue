@@ -6,16 +6,10 @@
         <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" style="margin-right: 10px;" @click="handleFilter">
           搜索
         </el-button>
-        <el-input v-model="listQuery.sequence_id" placeholder="Title" style="width: 200px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
-        <el-select v-model="listQuery.importance" placeholder="Imp" clearable style="width: 90px;margin-right: 10px;" class="filter-item">
-          <el-option v-for="item in importanceOptions" :key="item" :label="item" :value="item" />
-        </el-select>
-        <el-select v-model="listQuery.type" placeholder="Type" clearable class="filter-item" style="width: 130px;margin-right: 10px;">
-          <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" />
-        </el-select>
-        <el-select v-model="listQuery.sort" style="width: 140px;margin-right: 10px;" class="filter-item" @change="handleFilter">
-          <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
-        </el-select>
+        <el-input v-model="listQuery.sequence_id" placeholder="测序ID" style="width: 200px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
+        <el-input v-model="listQuery.batch" placeholder="测序批次" style="width: 200px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
+        <el-input v-model="listQuery.name_1" placeholder="NAME" style="width: 200px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
+
       </div>
       <el-divider>
       </el-divider>
@@ -266,6 +260,8 @@ export default {
         sequence_id: undefined,
         importance: undefined,
         type: undefined,
+        name_1: undefined,
+        batch: undefined,
         sort: "+id",
       },
       importanceOptions: [1, 2, 3],

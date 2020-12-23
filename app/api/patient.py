@@ -7,6 +7,7 @@ from app.models import Permission,PatientBasicInformation,DiseaseInformation,Sam
 from app.utils.decorator import permission_required
 from config import Config
 from app.utils.my_response import restfulResponse
+import json
 
 @bp.route('/disease/import', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
@@ -91,20 +92,28 @@ def get_patients():
 
     name = request.args.get('name', None)
     sex = request.args.get('sex', None)
+    case_number = request.args.get('case_number', None)
     if name:
         queryMap.append(PatientBasicInformation.name == name)
     if sex:
         queryMap.append(PatientBasicInformation.sex == sex)
+    if case_number:
+        queryMap.append(PatientBasicInformation.case_number == case_number)
 
-
-    querySort = []
-    sort = request.args.get('sort', '+id')
-    if sort == "+id":
-        querySort.append(PatientBasicInformation.id.asc())
-    else:
-        querySort.append(PatientBasicInformation.id.desc())
+    querySort = PatientBasicInformation.timestamp.desc()
+    sort = json.loads(request.args.get('sort', '{}'))
+    if sort.get('name', None):
+        if sort['name'] == "ascending":
+            querySort = PatientBasicInformation.age.asc()
+        elif sort['name'] == "descending":
+            querySort = PatientBasicInformation.age.desc()
+    if sort.get('id', None):
+        if sort['id'] == "ascending":
+            querySort = PatientBasicInformation.id.asc()
+        elif sort['id'] == "descending":
+            querySort = PatientBasicInformation.id.desc()
     data = PatientBasicInformation.to_collection_dict(
-        PatientBasicInformation.query.filter(*queryMap).order_by(*querySort), page, per_page,
+        PatientBasicInformation.query.filter(*queryMap).order_by(querySort), page, per_page,
         'api.get_patients')
     return restfulResponse(data)
 
@@ -215,8 +224,29 @@ def get_patient_diseases():
     per_page = min(
         request.args.get(
             'limit', current_app.config['POSTS_PER_PAGE'], type=int), 100)
+    queryMap = []
+    queryMap.append(DiseaseInformation.deleted == False)  # 非删除
+    sequence_id = request.args.get('sequence_id', None)  # 疾病类型
+    if sequence_id:
+        sample = SampleSequence.query.filter(SampleSequence.sequence_id==sequence_id).first()
+        queryMap.append(DiseaseInformation.id == sample.disease_id)
+
+
+    querySort = DiseaseInformation.timestamp.desc()
+    sort = json.loads(request.args.get('sort', '{}'))
+    if sort.get('age', None):
+        if sort['age'] == "ascending":
+            querySort = DiseaseInformation.age.asc()
+        elif sort['age'] == "descending":
+            querySort = DiseaseInformation.age.desc()
+    if sort.get('id', None):
+        if sort['id'] == "ascending":
+            querySort = DiseaseInformation.id.asc()
+        elif sort['id'] == "descending":
+            querySort = DiseaseInformation.id.desc()
+
     data = DiseaseInformation.to_collection_dict(
-        DiseaseInformation.query.filter(DiseaseInformation.deleted == False).order_by(DiseaseInformation.timestamp.desc()), page,
+        DiseaseInformation.query.filter(*queryMap).order_by(querySort), page,
         per_page,
         'api.get_sequences')
     print('疾病',data)

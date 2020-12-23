@@ -42,17 +42,17 @@
 
     <el-table ref="multipleTable" :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 98%;" max-height=" 80%" @sort-change="sortChange" element-loading-text="拼命加载中" @selection-change="handleSelectionChange">
       <el-table-column min-width='100px' type="selection" align="center"></el-table-column>
-      <el-table-column label="SequenceID" prop="id" sortable="custom" align="center" width="180px" :class-name="getSortClass('id')">
+      <el-table-column label="SequenceID" prop="sequence_id" :sortable="'custom'" :sort-orders="['ascending', 'descending']" align="center" width="180px">
         <template slot-scope="{row}">
           <span>{{ row.sequence_id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="采样日期" width="150px" align="center" prop="date1" sortable="custom" :class-name="getSortClass('date1')">
+      <el-table-column label="采样日期" width="150px" align="center" prop="collected_date" :sortable="'custom'" :sort-orders="['ascending', 'descending']">
         <template slot-scope="{row}">
           <span>{{ row.collected_date | parseTime('{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="抽血日期" width="150px" align="center" prop="date2" sortable="custom" :class-name="getSortClass('date2')">
+      <el-table-column label="抽血日期" width="150px" align="center" prop="blood_date" :sortable="'custom'" :sort-orders="['ascending', 'descending']">
         <template slot-scope="{row}">
           <span>{{ row.blood_date | parseTime('{y}-{m}-{d}') }}</span>
         </template>
@@ -250,7 +250,9 @@ export default {
         introduction: undefined,
         sample_origin: undefined,
         type: undefined,
-        sort: "+id",
+        sort: {
+          sequence_id: "descending",
+        },
       },
       importanceOptions: [1, 2, 3],
       calendarTypeOptions,
@@ -345,10 +347,13 @@ export default {
       row.status = status;
     },
     sortChange(data) {
+      // alert("chufa");
+      console.log("排序字段", data);
+      if (this.$refs.multipleTable) this.$refs.multipleTable.clearSort();
       const { prop, order } = data;
-      if (prop === "id") {
-        this.sortByID(order);
-      }
+      this.listQuery.sort = {};
+      this.listQuery.sort[prop] = order;
+      this.handleFilter();
     },
     sortByID(order) {
       if (order === "ascending") {
@@ -554,7 +559,7 @@ export default {
       return jsonData.map((v) => filterVal.map((j) => v[j]));
     },
     getSortClass: function (key) {
-      const sort = this.listQuery.sort;
+      const sort = this.listQuery.sort.key;
       return sort === `+${key}` ? "ascending" : "descending";
     },
     beforeUpload(file) {

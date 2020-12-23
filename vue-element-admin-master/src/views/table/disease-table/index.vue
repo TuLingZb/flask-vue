@@ -6,16 +6,7 @@
         <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" style="margin-right: 10px;" @click="handleFilter">
           搜索
         </el-button>
-        <el-input v-model="listQuery.title" placeholder="Title" style="width: 200px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
-        <el-select v-model="listQuery.importance" placeholder="Imp" clearable style="width: 90px;margin-right: 10px;" class="filter-item">
-          <el-option v-for="item in importanceOptions" :key="item" :label="item" :value="item" />
-        </el-select>
-        <el-select v-model="listQuery.type" placeholder="Type" clearable class="filter-item" style="width: 130px;margin-right: 10px;">
-          <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" />
-        </el-select>
-        <el-select v-model="listQuery.sort" style="width: 140px;margin-right: 10px;" class="filter-item" @change="handleFilter">
-          <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
-        </el-select>
+        <el-input v-model="listQuery.sequence_id" placeholder="测序ID" style="width: 200px;margin-right: 10px;" class="filter-item" @keyup.enter.native="handleFilter" />
       </div>
       <el-divider>
       </el-divider>
@@ -37,12 +28,12 @@
 
     <el-table ref="multipleTable" :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 98%;" max-height=" 80%" @sort-change="sortChange" element-loading-text="拼命加载中" @selection-change="handleSelectionChange">
       <el-table-column min-width='100px' type="selection" align="center"></el-table-column>
-      <el-table-column v-if="true" label="id" prop="id" sortable="custom" width="110px" align="center" :class-name="getSortClass('id')">
+      <el-table-column v-if="true" label="id" prop="id" sortable="custom" width="110px" align="center" :sort-orders="['ascending', 'descending']">
         <template slot-scope="{row}">
           <span style="color:red;">{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="就诊年龄" prop="age" sortable="custom" align="center" width="180px">
+      <el-table-column label="就诊年龄" prop="age" sortable="custom" align="center" width="180px" :sort-orders="['ascending', 'descending']">
         <template slot-scope="{row}">
           <span>{{ row.age }}</span>
         </template>
@@ -593,7 +584,8 @@ export default {
         importance: undefined,
         title: undefined,
         type: undefined,
-        sort: "+id",
+        sequence_id: undefined,
+        sort: {},
       },
       importanceOptions: [1, 2, 3],
       calendarTypeOptions,
@@ -751,10 +743,11 @@ export default {
       row.status = status;
     },
     sortChange(data) {
+      if (this.$refs.multipleTable) this.$refs.multipleTable.clearSort();
       const { prop, order } = data;
-      if (prop === "id") {
-        this.sortByID(order);
-      }
+      this.listQuery.sort = {};
+      this.listQuery.sort[prop] = order;
+      this.handleFilter();
     },
     sortByID(order) {
       if (order === "ascending") {
