@@ -36,3 +36,5 @@ class Config(object):
     LANGUAGES = ['zh', 'en']
 
     WRITE = ['admin','author']
+    HOST = '10.61.23.140'
+    PORT = 5001

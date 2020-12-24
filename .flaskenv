@@ -1,5 +1,5 @@
 FLASK_APP=madblog.py
-FLASK_ENV=development
+FLASK_ENV=production
 MAIL_SERVER=smtp.163.com
 MAIL_PORT=25
 MAIL_USERNAME=17764563720@163.com
