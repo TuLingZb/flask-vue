@@ -22,6 +22,7 @@ def excel_create_disease():
     sample_header = data['header']
     # print(sample_header)
     n = 1
+    sequence_ids = []
     with db.session.no_autoflush:
         for data in sample_data:
             n += 1
@@ -32,8 +33,10 @@ def excel_create_disease():
             patient = PatientBasicInformation.query.filter(PatientBasicInformation.name == name).filter(PatientBasicInformation.name == data['样品来源']).first() or PatientBasicInformation()
             patient.from_dict(data, trans=True)
             sequence_id = data.get('Sequence ID',None)
-            sequence = SampleSequence.query.get(sequence_id) or SampleSequence()
-            sequence.from_dict(data, trans=True)
+            if not SampleSequence.query.get(sequence_id) and sequence_id not in sequence_ids:
+                sequence = SampleSequence()
+                sequence.from_dict(data, trans=True)
+                sequence_ids.append(sequence_id)
             disease = DiseaseInformation.query.filter(sequence.disease_info.patient_id == patient.id).first() if sequence.disease_info else DiseaseInformation()
 
             disease.from_dict(data,trans=True)

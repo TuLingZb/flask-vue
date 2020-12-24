@@ -20,7 +20,7 @@ naming_convention = {
 }
 db = SQLAlchemy(metadata=MetaData(naming_convention=naming_convention))
 # Flask-Migrate plugin
-migrate = Migrate(render_as_batch=True)
+migrate = Migrate()
 # Flask-Mail plugin
 mail = Mail()
 # Flask-Babel plugin

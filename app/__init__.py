@@ -7,12 +7,13 @@ import rq
 from flask import Flask, request
 from app.api import bp as api_bp
 from app.extensions import cors, db, migrate, mail, babel
+from werkzeug.contrib.fixers import ProxyFix
 
 
 def create_app(config_class=None):
     '''Factory Pattern: Create Flask app.'''
     app = Flask(__name__)
-
+    app.wsgi_app = ProxyFix(app.wsgi_app)
     # Initialization flask app
     configure_app(app, config_class)
     configure_blueprints(app)
