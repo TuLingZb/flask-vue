@@ -259,7 +259,7 @@ class User(PaginatedAPIMixin, db.Model):
             # 新建用户时，给用户自动分配角色
             if self.role is None:
                 if self.email in current_app.config['ADMINS']:
-                    self.role = Role.query.filter_by(slug='administrator').first()
+                    self.role = Role.query.filter_by(slug='admin').first()
                 else:
                     self.role = Role.query.filter_by(default=True).first()
 
