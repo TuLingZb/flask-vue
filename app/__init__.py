@@ -8,7 +8,7 @@ from flask import Flask, request
 from app.api import bp as api_bp
 from app.extensions import cors, db, migrate, mail, babel
 from werkzeug.contrib.fixers import ProxyFix
-
+import os
 
 def create_app(config_class=None):
     '''Factory Pattern: Create Flask app.'''
@@ -42,8 +42,12 @@ def configure_app(app, config_class):
 
 
 def configure_blueprints(app):
+    env = os.environ.get('FLASK_ENV','dev')
     # 注册 blueprint
-    app.register_blueprint(api_bp, url_prefix='/api/vue-element-admin')
+    if env == 'production':
+        app.register_blueprint(api_bp, url_prefix='/pro_api/vue-element-admin')
+    else:
+        app.register_blueprint(api_bp, url_prefix='/api/vue-element-admin')
 
 
 def configure_extensions(app):
