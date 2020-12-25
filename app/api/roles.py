@@ -5,6 +5,7 @@ from app.api.errors import bad_request, error_response
 from app.extensions import db
 from app.models import Role,User
 from app.utils.decorator import admin_required
+from app.utils.my_response import restfulResponse
 
 
 # @bp.route('/roles/perms', methods=['GET'])
@@ -16,7 +17,7 @@ from app.utils.decorator import admin_required
 #         {'name': 'WRITE', 'dec': 4},
 #         {'name': 'ADMIN', 'dec': 128}
 #     ]
-#     return jsonify(data)
+#     return restfulResponse(data)
 
 
 # @bp.route('/roles', methods=['POST'])
@@ -49,21 +50,39 @@ from app.utils.decorator import admin_required
 #     db.session.add(role)
 #     db.session.commit()
 #
-#     response = jsonify(role.to_dict())
+#     response = restfulResponse(role.to_dict())
 #     response.status_code = 201
 #     # HTTP协议要求201响应包含一个值为新资源URL的Location头部
 #     response.headers['Location'] = url_for('api.get_role', id=role.id)
 #     return response
 
 
-@bp.route('/roles', methods=['GET'])
+@bp.route('/roles/list', methods=['GET'])
 @token_auth.login_required(role='admin')
 def get_roles():
     '''返回所有角色的集合'''
     page = request.args.get('page', 1, type=int)
-    per_page = min(request.args.get('per_page', 10, type=int), 100)
-    data = Role.to_collection_dict(Role.query, page, per_page, 'api.get_roles')
-    return jsonify(data)
+    per_page = min(request.args.get('limit', 10, type=int), 100)
+    queryMap = []
+
+    username = request.args.get('username', None)
+    print(username)
+    role = request.args.get('role', None)
+    if username:
+        queryMap.append(User.username == username)
+    if role:
+        queryMap.append(User.role_id == role)
+    querySort = []
+    sort = request.args.get('sort', '+id')
+    if sort == "+id":
+        querySort.append(User.id.asc())
+    else:
+        querySort.append(User.id.desc())
+
+    data = User.to_collection_dict(
+        User.query.filter(*queryMap).order_by(*querySort), page, per_page,
+        'api.get_roles')
+    return restfulResponse(data)
 
 
 @bp.route('/roles/<int:id>', methods=['GET'])
@@ -73,27 +92,27 @@ def get_role(id):
     role = Role.query.get_or_404(id)
     data = role.to_dict()
 
-    return jsonify(data)
+    return restfulResponse(data)
 
 
-@bp.route('/roles/<int:id>', methods=['PUT'])
+@bp.route('/role/update', methods=['PUT'])
 @token_auth.login_required(role='admin')
-def update_role(id):
+def update_role():
     '''修改用户角色'''
-    user = User.query.get_or_404(id)
+    data = request.get_json()
+    print('pp',data)
+    id = data.get("id",0)
+    user = User.query.get(id)
+    if not user:
+        return bad_request("用户不存在")
     # 自己不能修改自己的用户角色
     if g.current_user == user:
-        return error_response(403)
-    data = request.get_json()
+        return error_response(403,"不能修改自己的角色")
     message = {}
-    role_id_list =[i[0] for i in Role.query.with_entities(Role.id).distinct().all()]
-    if int(data.get('role_id', -1)) not in role_id_list:
-        message['role_id'] = 'invaild role id.'
-    if message:
-        return bad_request(message)
+    
     user.from_dict(data)
     db.session.commit()
-    return jsonify(user.to_dict())
+    return restfulResponse(user.to_dict())
 
 
 # @bp.route('/roles/<int:id>', methods=['DELETE'])

@@ -166,8 +166,8 @@ def update_post():
     #     message['date'] = 'date is required.'
     if 'sex' not in data or not data.get('sex').strip():
         message['sex'] = 'sex is required.'
-    if len(data.get('address')) > 255:
-        message['address'] = 'address must less than 255 characters.'
+    if len(data.get('address','')) > 1000:
+        message['address'] = '地址信息太长了.'
     if message:
         return bad_request(message)
 
