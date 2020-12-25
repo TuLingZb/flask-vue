@@ -42,7 +42,7 @@ def configure_app(app, config_class):
 
 
 def configure_blueprints(app):
-    env = os.environ.get('FLASK_ENV','dev')
+    env = os.environ.get('FLASK_ENV','production')
     # 注册 blueprint
     if env == 'production':
         app.register_blueprint(api_bp, url_prefix='/pro_api/vue-element-admin')
