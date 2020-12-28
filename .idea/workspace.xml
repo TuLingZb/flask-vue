@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="dc70fa2e-b57a-4a82-bbe3-3f8c8eed9110" name="默认更改列表" comment="添加病人信息接口和样本信息接口" />
+    <list default="true" id="dc70fa2e-b57a-4a82-bbe3-3f8c8eed9110" name="默认更改列表" comment="添加病人信息接口和样本信息接口">
+      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,13 +47,15 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/api/patient.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="36" selection-start-line="36" selection-end-line="36" />
+            <state relative-caret-position="-151">
+              <caret column="17" selection-start-column="11" selection-end-column="17" />
               <folding>
-                <element signature="e#0#59#0" expanded="true" />
+                <element signature="e#2317#3283#0" />
+                <element signature="e#3354#4784#0" />
+                <element signature="e#4913#5934#0" />
               </folding>
             </state>
           </provider>
@@ -100,10 +104,12 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="6945">
-              <caret line="473" column="32" selection-start-line="473" selection-start-column="4" selection-end-line="473" selection-end-column="32" />
+            <state relative-caret-position="251">
+              <caret line="175" column="17" selection-start-line="175" selection-start-column="8" selection-end-line="175" selection-end-column="17" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
+                <element signature="e#21597#25970#0" />
+                <element signature="e#27442#30898#0" />
               </folding>
             </state>
           </provider>
@@ -130,10 +136,10 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="112">
+            <state relative-caret-position="120">
               <caret line="43" column="30" selection-start-line="43" selection-start-column="30" selection-end-line="43" selection-end-column="30" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
@@ -153,7 +159,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>样品来源</find>
       <find>样本来源</find>
       <find>来源</find>
       <find>get_disease_info</find>
@@ -161,12 +166,10 @@
       <find>include_email</find>
       <find>role</find>
       <find>auth_error_callback</find>
-      <find>from_dict</find>
       <find>测序批次</find>
       <find>administrator</find>
       <find>get_role</find>
       <find>crea</find>
-      <find>create</find>
       <find>update</find>
       <find>(.*) = (.*)</find>
       <find>\n</find>
@@ -183,6 +186,9 @@
       <find>run_migrations_online</find>
       <find>preoperative_tumor_treatment</find>
       <find>db</find>
+      <find>create</find>
+      <find>from</find>
+      <find>from_dict</find>
     </findStrings>
     <replaceStrings>
       <replace>String</replace>
@@ -224,7 +230,6 @@
         <option value="$APPLICATION_CONFIG_DIR$/consoles/db/596a856b-05bc-4731-8182-085aee29573c/console.sql" />
         <option value="$PROJECT_DIR$/app/api/posts.py" />
         <option value="$PROJECT_DIR$/app/extensions.py" />
-        <option value="$PROJECT_DIR$/app/models.py" />
         <option value="$PROJECT_DIR$/migrations/env.py" />
         <option value="$APPLICATION_CONFIG_DIR$/consoles/.datagrid/cell" />
         <option value="$PROJECT_DIR$/app/api/patient.py" />
@@ -235,6 +240,7 @@
         <option value="$PROJECT_DIR$/config.py" />
         <option value="$PROJECT_DIR$/madblog.py" />
         <option value="$PROJECT_DIR$/app/__init__.py" />
+        <option value="$PROJECT_DIR$/app/models.py" />
       </list>
     </option>
   </component>
@@ -270,6 +276,12 @@
               <item name="flask-vue-sample" type="b2602c69:ProjectViewProjectNode" />
               <item name="flask-vue-sample" type="462c0819:PsiDirectoryNode" />
               <item name="app" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="flask-vue-sample" type="b2602c69:ProjectViewProjectNode" />
+              <item name="flask-vue-sample" type="462c0819:PsiDirectoryNode" />
+              <item name="app" type="462c0819:PsiDirectoryNode" />
+              <item name="api" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -451,7 +463,7 @@
       <workItem from="1608537495340" duration="35164000" />
       <workItem from="1608814478501" duration="599000" />
       <workItem from="1608820592025" duration="954000" />
-      <workItem from="1609116891177" duration="595000" />
+      <workItem from="1609116891177" duration="1613000" />
     </task>
     <task id="LOCAL-00001" summary="添加病人信息接口和样本信息接口">
       <created>1607408524567</created>
@@ -464,7 +476,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="201842000" />
+    <option name="totallyTimeSpent" value="202860000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -479,7 +491,7 @@
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6802842" visible="true" weight="0.22603719" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.6802842" visible="true" weight="0.22603719" />
       <window_info id="Structure" order="1" sideWeight="0.3197158" side_tool="true" weight="0.20893142" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -839,16 +851,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/api/patient.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="36" selection-start-line="36" selection-end-line="36" />
-          <folding>
-            <element signature="e#0#59#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.flaskenv">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
@@ -879,16 +881,6 @@
     <entry file="file://$PROJECT_DIR$/nginx.conf">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6945">
-          <caret line="473" column="32" selection-start-line="473" selection-start-column="4" selection-end-line="473" selection-end-column="32" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="das://09c8b5aa-1c22-4079-bd08-8ee29766427f/schema/sampleInformation/table/users">
       <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
         <state>
@@ -908,10 +900,34 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="112">
+        <state relative-caret-position="120">
           <caret line="43" column="30" selection-start-line="43" selection-start-column="30" selection-end-line="43" selection-end-column="30" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="251">
+          <caret line="175" column="17" selection-start-line="175" selection-start-column="8" selection-end-line="175" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#21597#25970#0" />
+            <element signature="e#27442#30898#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/api/patient.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-151">
+          <caret column="17" selection-start-column="11" selection-end-column="17" />
+          <folding>
+            <element signature="e#2317#3283#0" />
+            <element signature="e#3354#4784#0" />
+            <element signature="e#4913#5934#0" />
           </folding>
         </state>
       </provider>
