@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="dc70fa2e-b57a-4a82-bbe3-3f8c8eed9110" name="默认更改列表" comment="添加病人信息接口和样本信息接口">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/madblog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/madblog.log" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -73,7 +71,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="152">
+            <state relative-caret-position="300">
               <caret line="21" column="47" selection-start-line="21" selection-start-column="47" selection-end-line="21" selection-end-column="47" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
@@ -125,7 +123,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/madblog.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-25">
+            <state relative-caret-position="15">
               <caret line="8" column="11" selection-start-line="8" selection-start-column="11" selection-end-line="8" selection-end-column="11" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
@@ -138,7 +136,7 @@
         <entry file="file://$PROJECT_DIR$/app/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="112">
-              <caret line="43" column="30" lean-forward="true" selection-start-line="43" selection-start-column="30" selection-end-line="43" selection-end-column="30" />
+              <caret line="43" column="30" selection-start-line="43" selection-start-column="30" selection-end-line="43" selection-end-column="30" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -262,6 +260,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -278,7 +277,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -455,6 +453,7 @@
       <workItem from="1608537495340" duration="35164000" />
       <workItem from="1608814478501" duration="599000" />
       <workItem from="1608820592025" duration="954000" />
+      <workItem from="1609116891177" duration="595000" />
     </task>
     <task id="LOCAL-00001" summary="添加病人信息接口和样本信息接口">
       <created>1607408524567</created>
@@ -467,7 +466,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="201247000" />
+    <option name="totallyTimeSpent" value="201842000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -479,15 +478,15 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="28" width="1440" height="872" extended-state="0" />
+    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6802842" visible="true" weight="0.22317597" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6802842" visible="true" weight="0.22603719" />
       <window_info id="Structure" order="1" sideWeight="0.3197158" side_tool="true" weight="0.20893142" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32793018" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.33167082" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.33167082" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -852,6 +851,23 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/.flaskenv">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="9" selection-start-line="1" selection-end-line="1" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="21" column="47" selection-start-line="21" selection-start-column="47" selection-end-line="21" selection-end-column="47" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/messages.pot">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -882,26 +898,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="21" column="47" selection-start-line="21" selection-start-column="47" selection-end-line="21" selection-end-column="47" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.flaskenv">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="1" column="9" selection-start-line="1" selection-end-line="1" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/madblog.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-25">
+        <state relative-caret-position="15">
           <caret line="8" column="11" selection-start-line="8" selection-start-column="11" selection-end-line="8" selection-end-column="11" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
@@ -912,7 +911,7 @@
     <entry file="file://$PROJECT_DIR$/app/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="112">
-          <caret line="43" column="30" lean-forward="true" selection-start-line="43" selection-start-column="30" selection-end-line="43" selection-end-column="30" />
+          <caret line="43" column="30" selection-start-line="43" selection-start-column="30" selection-end-line="43" selection-end-column="30" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
