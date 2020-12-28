@@ -6,7 +6,9 @@ from app.extensions import db
 from app.models import Permission, SampleSequence,SequenceResult
 from config import Config
 from app.utils.my_response import restfulResponse
+from flask_cors import cross_origin
 import json
+from app.extensions import cors
 
 @bp.route('/sequence/search', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
@@ -24,6 +26,7 @@ def search_result():
     pass
 
 @bp.route('/sequences/import', methods=['POST'])
+@cross_origin()
 @token_auth.login_required(role=Config.WRITE)
 def excel_create():
     '''excel导入样本测序信息'''
@@ -49,6 +52,7 @@ def excel_create():
 
 
 @bp.route('/result/import', methods=['POST'])
+@cross_origin()
 @token_auth.login_required(role=Config.WRITE)
 def excel_create_result():
     '''excel导入样本测序结果信息'''
