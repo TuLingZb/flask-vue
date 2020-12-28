@@ -13,11 +13,22 @@ import os
 def create_app(config_class=None):
     '''Factory Pattern: Create Flask app.'''
     app = Flask(__name__)
+    configure_extensions(app)
+
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        if request.method == 'OPTIONS':
+            response.headers['Access-Control-Allow-Methods'] = 'DELETE, GET, POST, PUT'
+            headers = request.headers.get('Access-Control-Request-Headers')
+            if headers:
+                response.headers['Access-Control-Allow-Headers'] = headers
+        return response
+
     app.wsgi_app = ProxyFix(app.wsgi_app)
     # Initialization flask app
     configure_app(app, config_class)
     configure_blueprints(app)
-    configure_extensions(app)
     configure_logging(app)
     # 不使用 Jinja2，用不到模版过滤器和上下文处理器
     # configure_template_filters(app)
