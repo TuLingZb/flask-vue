@@ -447,7 +447,7 @@ class PatientBasicInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             if not trans and field in data:
                 if field in ['timestamp', 'collected_date','date']:
                     data[field] = transfor_dateformat(str(data[field]))
-                if data.get('id',0) == 0:
+                if not data.get('id',0):
                     continue
                 setattr(self, field, data[field])
             elif trans and field in data:
@@ -730,7 +730,7 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             if not trans and field in data:
                 if field in ['timestamp', 'collected_date','Time_of_death','operation_date','prothrombin_time','Recurrence_time','survival_time']:
                     data[field] = transfor_dateformat(str(data[field]))
-                if data.get('id',0) == 0:
+                if not data.get('id',0):
                     continue
                 setattr(self, field, data[field])
             elif trans and field in data:
@@ -900,7 +900,7 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
             if not trans and field in data:
                 if field in ['timestamp','collected_date']:
                     data[field] = transfor_dateformat(str(data[field]))
-                if data.get('id',0) == 0:
+                if not data.get('id',0):
                     continue
                 setattr(self, field, data[field])
             elif trans and field in data:
@@ -996,7 +996,7 @@ class SequenceResult(SearchableMixin, PaginatedAPIMixin, db.Model):
             if not trans and field in data:
                 # if field in ['timestamp', 'collected_date']:
                     # data[field] = datetime.strptime(str(data[field])[:-5], '%Y-%m-%dT%H:%M:%S')
-                if data.get('id',0) == 0:
+                if not data.get('id',0):
                     continue
                 setattr(self, field, data[field])
             elif trans and field in data:
