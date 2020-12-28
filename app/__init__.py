@@ -17,7 +17,7 @@ def create_app(config_class=None):
 
     @app.after_request
     def after_request(response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers['Access-Control-Allow-Origin'] = '*'
         if request.method == 'OPTIONS':
             response.headers['Access-Control-Allow-Methods'] = 'DELETE, GET, POST, PUT'
             headers = request.headers.get('Access-Control-Request-Headers')
