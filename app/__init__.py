@@ -15,11 +15,6 @@ def create_app(config_class=None):
     app = Flask(__name__)
     configure_extensions(app)
 
-    @app.after_request
-    def after_request(response):
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        return response
-
     app.wsgi_app = ProxyFix(app.wsgi_app)
     # Initialization flask app
     configure_app(app, config_class)

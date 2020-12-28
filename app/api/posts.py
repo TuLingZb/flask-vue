@@ -48,7 +48,7 @@ def excel_create():
         post.author = g.current_user
         db.session.add(post)
     db.session.commit()
-    response = restfulResponse({})
+    response = restfulResponse("上传完成")
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
@@ -65,8 +65,6 @@ def excel_create_result():
     sample_data = data['data']
     print(sample_data)
     print(len(sample_data))
-    sample_header = data['header']
-    # print(sample_header)
     for data in sample_data:
         sequence_id = data.get('Sequence ID', None)
         batch = data.get('测序批次', '')
@@ -81,7 +79,7 @@ def excel_create_result():
         db.session.add(result)
         db.session.add(post)
     db.session.commit()
-    response = restfulResponse({})
+    response = restfulResponse("上传完成")
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 

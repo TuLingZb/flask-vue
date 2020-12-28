@@ -18,14 +18,13 @@ def excel_create_disease():
         return bad_request('excel表内容为空')
 
     sample_data = data['data']
-    # print(sample_data)
-    sample_header = data['header']
-    # print(sample_header)
+    print(sample_data)
     n = 1
     sequence_ids = []
     with db.session.no_autoflush:
         for data in sample_data:
             n += 1
+            # print(data)
             name = data.get('姓名',None)
             origin = data.get('样品来源',None)
             if not name or not origin or name == '姓名':
@@ -37,6 +36,8 @@ def excel_create_disease():
                 sequence = SampleSequence()
                 sequence.from_dict(data, trans=True)
                 sequence_ids.append(sequence_id)
+            else:
+                sequence = SampleSequence.query.get(sequence_id)
             disease = DiseaseInformation.query.filter(sequence.disease_info.patient_id == patient.id).first() if sequence.disease_info else DiseaseInformation()
 
             disease.from_dict(data,trans=True)
@@ -49,7 +50,7 @@ def excel_create_disease():
                 print('id:',sequence.sequence_id)
                 print(n, data)
         db.session.commit()
-    response = restfulResponse({})
+    response = restfulResponse("上传完成")
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
