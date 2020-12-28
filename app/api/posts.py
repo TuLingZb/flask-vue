@@ -48,7 +48,9 @@ def excel_create():
         post.author = g.current_user
         db.session.add(post)
     db.session.commit()
-    return restfulResponse({})
+    response = restfulResponse({})
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 @bp.route('/result/import', methods=['POST'])
@@ -79,7 +81,9 @@ def excel_create_result():
         db.session.add(result)
         db.session.add(post)
     db.session.commit()
-    return restfulResponse({})
+    response = restfulResponse({})
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 

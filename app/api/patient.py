@@ -49,7 +49,9 @@ def excel_create_disease():
                 print('id:',sequence.sequence_id)
                 print(n, data)
         db.session.commit()
-    return restfulResponse({})
+    response = restfulResponse({})
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 @bp.route('/patient/create', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
