@@ -26,7 +26,6 @@ def search_result():
     pass
 
 @bp.route('/sequences/import', methods=['POST'])
-@cross_origin()
 @token_auth.login_required(role=Config.WRITE)
 def excel_create():
     '''excel导入样本测序信息'''
@@ -54,7 +53,6 @@ def excel_create():
 
 
 @bp.route('/result/import', methods=['POST'])
-@cross_origin()
 @token_auth.login_required(role=Config.WRITE)
 def excel_create_result():
     '''excel导入样本测序结果信息'''
