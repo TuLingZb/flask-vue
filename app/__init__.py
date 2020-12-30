@@ -9,6 +9,7 @@ from app.api import bp as api_bp
 from app.extensions import cors, db, migrate, mail, babel
 from werkzeug.contrib.fixers import ProxyFix
 import os
+import flask_excel
 
 def create_app(config_class=None):
     '''Factory Pattern: Create Flask app.'''
@@ -63,6 +64,8 @@ def configure_extensions(app):
     mail.init_app(app)
     # Init Flask-Babel
     babel.init_app(app)
+    # Init Flask-Excel
+    flask_excel.init_excel(app)
 
     @babel.localeselector
     def get_locale():

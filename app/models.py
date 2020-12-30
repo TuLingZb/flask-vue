@@ -742,7 +742,7 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
 
 
 
-
+from app.utils.sql_json import to_json
 
 
 
@@ -786,6 +786,10 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
         #     target.introduction = value[:200] + '  ... ...'  # 截取 body 字段的前200个字符给 summary
         pass
 
+    @property
+    def serialize(self):
+        return to_json(self, self.__class__)
+
     def to_dict(self):
         data = {
             'sequence_id': self.sequence_id,
@@ -806,78 +810,6 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
                 'self': url_for('api.get_sequence', id=self.sequence_id),  #获取详情 TODO
             }
         }
-        # if self.disease_info:
-        #     data['_links']['diseese_url'] = url_for('api.get_disease', id=self.disease_id)
-        #     data['disease'] = {
-        #         'id': self.disease_info.id,
-        #         'collected_date': self.disease_info.collected_date,
-        #         'age': self.disease_info.age,
-        #         'disease_type': self.disease_info.disease_type,
-        #         'type': self.disease_info.type,
-        #         'TNM': self.disease_info.tnm,
-        #         'period': self.disease_info.period,
-        #         'pathological_immunohistochemistry': self.disease_info.pathological_immunohistochemistry,
-        #         'operation_date': self.disease_info.operation_date,
-        #         'pathological_information': self.disease_info.pathological_information,
-        #         'Typing': self.disease_info.Typing,
-        #         'hypertension': self.disease_info.hypertension,
-        #         'diabetes': self.disease_info.diabetes,
-        #         'history_of_cancer': self.disease_info.history_of_cancer,
-        #         'systemic_diseases': self.disease_info.systemic_diseases,
-        #         'family_history': self.disease_info.family_history,
-        #         'antiviral_therapy': self.disease_info.antiviral_therapy,
-        #         'preoperative_tumor_treatment': self.disease_info.preoperative_tumor_treatment,
-        #         'blood_lipids': self.disease_info.blood_lipids,
-        #         'biochemical_indicators': self.disease_info.biochemical_indicators,
-        #         'lymphocyte': self.disease_info.lymphocyte,
-        #         'Neutrophils': self.disease_info.Neutrophils,
-        #         'after_AEP': self.disease_info.after_AEP,
-        #         'after_CEA': self.disease_info.after_CEA,
-        #         'after_CA19_9': self.disease_info.after_CA19_9,
-        #         'HBV_DNA': self.disease_info.HBV_DNA,
-        #         'hepatitis_B_surface_antigen': self.disease_info.hepatitis_B_surface_antigen,
-        #         'surface_antibody': self.disease_info.surface_antibody,
-        #         'E_antigen': self.disease_info.E_antigen,
-        #         'E_antibody': self.disease_info.E_antibody,
-        #         'core_antibody': self.disease_info.core_antibody,
-        #         'smoking': self.disease_info.smoking,
-        #         'treatment': self.disease_info.treatment,
-        #         'patient': {},
-        #         'sequences': [sequence.id for sequence in self.disease_info.sequences]
-        #
-        #     }
-        #     if self.disease_info.patient_id:
-        #         data['disease']['patient'] = {
-        #         'id': self.disease_info.patient_info.id,
-        #         'name': self.disease_info.patient_info.name,
-        #         'case_number': self.disease_info.patient_info.case_number,
-        #         'sex': self.disease_info.patient_info.sex,
-        #         'date': self.disease_info.patient_info.date,
-        #         'address': self.disease_info.patient_info.address,
-        #     }
-        #
-        # if self.author_id:
-        #     data['_links']['author_url'] = url_for('api.get_user', id=self.author_id)
-        #     data['author'] = {
-        #         'id': self.author.id,
-        #         'username': self.author.username,
-        #         'name': self.author.name,
-        #         'avatar': self.author.avatar(128)
-        #     }
-        # if self.results:
-        #     data['results'] = [
-        #         {
-        #             'id': result.id,
-        #             'name_1': result.name_1,
-        #             'data_quality_input': result.data_quality_input,
-        #             'data_quality_bam': result.data_quality_bam,
-        #             'data_quality_bam_input': result.data_quality_bam_input,
-        #             'data_Quality_uniq_bam': result.data_Quality_uniq_bam,
-        #             'data_Quality_uniq_nodup_bam': result.data_Quality_uniq_nodup_bam,
-        #             'data_Quality_uniq_nodup_bam_input': result.data_Quality_uniq_nodup_bam_input,
-        #             'coverage': result.coverage,
-        #         } for result in self.results
-        #     ]
         return data
 
     def from_dict(self, data,trans=False):
@@ -908,6 +840,10 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
                     data[field] = transfor_dateformat(str(data[field]))
                 # print(data[field])
                 setattr(self, column_list[field], data[field])
+
+    def to_chart_origin(self):
+        pass
+
 
     # def is_liked_by(self, user):
     #     '''判断用户 user 是否已经收藏过该文章'''
