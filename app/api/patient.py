@@ -7,6 +7,7 @@ from app.models import Permission,PatientBasicInformation,DiseaseInformation,Sam
 from app.utils.decorator import permission_required
 from config import Config
 from app.utils.my_response import restfulResponse
+from sqlalchemy import and_
 import json
 
 @bp.route('/disease/import', methods=['POST'])
@@ -21,6 +22,17 @@ def excel_create_disease():
     print(sample_data)
     n = 1
     sequence_ids = []
+    origin_list = (
+        db.session.query(SampleSequence.disease_type, db.func.count("*").label("value"))
+            .filter(
+            and_(
+                SampleSequence.disease_type != ".", SampleSequence.disease_type != None
+            )
+        )
+            .group_by(SampleSequence.disease_type)
+            .all()
+    )
+    
     with db.session.no_autoflush:
         for data in sample_data:
             n += 1
@@ -28,6 +40,10 @@ def excel_create_disease():
             name = data.get('姓名',None)
             origin = data.get('样品来源',None)
             if not name or not origin or name == '姓名':
+                continue
+
+            if data.get('疾病类型') not in []:
+                print(data)
                 continue
             patient = PatientBasicInformation.query.filter(PatientBasicInformation.name == name).filter(PatientBasicInformation.name == data['样品来源']).first() or PatientBasicInformation()
             patient.from_dict(data, trans=True)

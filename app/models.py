@@ -759,6 +759,7 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
     gao_lab_id = db.Column(db.String(255),comment='gao_lab_id')
     introduction = db.Column(db.Text)
     sample_origin = db.Column(db.String(255),comment='样品来源')
+    sample_origin_province = db.Column(db.String(255),comment='样品来源(省份)')
     collected_date = db.Column(db.DATE,comment='采样日期')
     blood_date = db.Column(db.DATE,comment='抽血日期')
     special_operation = db.Column(db.String(255),comment='实验特殊操作备注（样本过滤、浓缩、建库…)')
@@ -797,6 +798,7 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
             'gao_lab_id': self.gao_lab_id,
             'introduction': self.introduction,
             'sample_origin': self.sample_origin,
+            'sample_origin_province': self.sample_origin_province,
             'collected_date': self.collected_date,
             'timestamp': self.timestamp,
             'author_id': self.author_id,
@@ -813,7 +815,7 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
         return data
 
     def from_dict(self, data,trans=False):
-        column_list = ['disease_type','special_operation','sequence_id', 'id', 'gao_lab_id', 'introduction','sample_origin','collected_date','timestamp','author_id','disease_id']
+        column_list = ['disease_type','special_operation','sequence_id', 'id', 'gao_lab_id', 'introduction','sample_origin','sample_origin_province','collected_date','timestamp','author_id','disease_id']
 
         if trans:
             column_list = {'实验特殊操作备注（样本过滤、浓缩、建库…)':'special_operation',
@@ -824,6 +826,7 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
                            'Gao lab ID': 'gao_lab_id',
                            'Introduction': 'introduction',
                            '样品来源': 'sample_origin',
+                           '样品来源（省份）': 'sample_origin_province',
                            '疾病类型':'disease_type',
                            '抽血日期': 'blood_date',
                            '采样日期': 'collected_date',

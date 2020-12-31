@@ -51,30 +51,32 @@ def file_upload():
 
 
 @bp.route("/sequences/origin", methods=["GET"])
-@token_auth.login_required
+# @token_auth.login_required
 def chart_origin():
     """样本来源统计"""
     dict = []
     origin_list = (
         db.session.query(
-            SampleSequence.sample_origin, db.func.count("*").label("value")
+            SampleSequence.sample_origin_province, db.func.count("*").label("value")
         )
         .filter(
             and_(
-                SampleSequence.sample_origin != ".",
-                SampleSequence.sample_origin != None,
+                SampleSequence.sample_origin_province != ".",
+                SampleSequence.sample_origin_province != None,
             )
         )
-        .group_by(SampleSequence.sample_origin)
+        .group_by(SampleSequence.sample_origin_province)
         .all()
     )
     for key, value in list(origin_list):
+        if '省' in key or '市' in key:
+            key = key[:-1]
         dict.append({"name": key, "value": value})
     return restfulResponse(dict)
 
 
 @bp.route("/sequences/type", methods=["GET"])
-@token_auth.login_required
+# @token_auth.login_required
 def chart_type():
     """疾病类型统计"""
     dict = []
@@ -97,21 +99,18 @@ def chart_type():
 # @token_auth.login_required
 def chart_coverage():
     """coverage统计"""
-    coverage = []
-    coverageDict = {}
-    coverageData = []
     origin_list = (
-        db.session.query(SequenceResult.coverage)
+        db.session.query(SequenceResult.name_1,SequenceResult.coverage)
         .filter(and_(SequenceResult.coverage != ".", SequenceResult.coverage != None)).order_by(SequenceResult.coverage.desc())
         .all()
     )
-    dict ={}
+    dict =[]
     for i in origin_list:
-        # if dict.get(match_name_1(i[0])):
-        #     dict.get(match_name_1(i[0])).append()
-        data = i[0] * 10000 // 1
-        coverage.append(data / 100)
-    return restfulResponse(coverage)
+        if match_name_1(str(i[0])):
+            coverage = int(i[1] * 100)
+            # print(i[0])
+            dict.append({"type":match_name_1(str(i[0])),"value":coverage})
+    return restfulResponse(dict)
 
 
 @bp.route("/sequence/search", methods=["POST"])
@@ -138,14 +137,15 @@ def excel_create():
     # print(data)
     if not data:
         return bad_request("excel表内容为空")
-
+    id_list = []
     sample_data = data["data"]
     with db.session.no_autoflush:
         for data in sample_data:
             sequence_id = data.get("Sequence ID", None)
-            if not isinstance(sequence_id, int):
-                print(data)
+            if not isinstance(sequence_id, int) or sequence_id in id_list:
+                print("重复的",sequence_id,type(sequence_id),data)
                 continue
+            id_list.append(sequence_id)
                 # return bad_request(f"缺少Sequence ID{sequence_id}")
             post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
             post.from_dict(data, trans=True)
