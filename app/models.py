@@ -453,6 +453,8 @@ class PatientBasicInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             elif trans and field in data:
                 if column_list[field] in ['timestamp', 'collected_date','date']:
                         data[field] = transfor_dateformat(str(data[field]))
+                if data.get('age') == '.':
+                    data['age'] = 0
                 setattr(self, column_list[field], data[field])
 
 
@@ -461,6 +463,7 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
     '''样本疾病信息表'''
     __tablename__ = 'diseases'
     id = db.Column(db.Integer, primary_key=True)
+    disease_type = db.Column(db.String(255), comment='疾病类型')
     age = db.Column(db.Integer, comment='就诊年龄')
     pathological_information = db.Column(db.Text,comment='病理完整信息')
     process = db.Column(db.Text,comment='进展')
@@ -553,6 +556,7 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
     def to_dict(self):
         data = {
             'id': self.id,
+            'disease_type': self.disease_type,
             'age': self.age,
             'pathological_information': self.pathological_information,
             'process': self.process,
@@ -643,9 +647,10 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
         return data
 
     def from_dict(self, data,trans=False):
-        column_list = ['id','age','pathological_information','process','Typing','Class','pathological_immunohistochemistry','tnm','period','period','operationed','collected_date','operation_date','preoperative_tumor_treatment','Chief_complaint','drinking','hypertension','diabetes','smoking','history_of_cancer','systemic_diseases','family_history','antiviral_therapy','blood_lipids ','biochemical_indicators','lymphocyte','Neutrophils','after_AEP','after_CEA','after_CA19_9','HBV_DNA','hepatitis_B_surface_antigen','surface_antibody','E_antigen','E_antibody','core_antibody','hcv','HCV_Ab','HCV_RNA','thyroid','total_bilirubin','albumin','prothrombin_time','hepatic_encephalopathy','ascites','Child_Pugh','Postoperative_chemotherapy','Recurrence_time','Targeted_drug_therapy','internal','Radiofrequency_therapy','surgical_treatment','Time_of_death','Postoperative_abnormalities','survival_time','Preoperative_colonoscopy','Colonoscopy_pathology','Liver_metastasis','number','max_diameter','diameter','sub_stove','Macroscopic_tumor_thrombus','Location_of_tumor_thrombus','envelope','necrosis','Extrahepatic_nvasion','Capsule_breakthrough','Multifocal_growth_under_microscope','Mirror_sub_stove','Microvascular_tumor_thrombus','cirrhosis','hepatitis','BCLC','UICC','Postoperative_TACE','Antiviral_therapy_after_operation','PSA','Lauren_classification','remarks','treatment','timestamp','deleted',]
+        column_list = ['disease_type','age','pathological_information','process','Typing','Class','pathological_immunohistochemistry','tnm','period','period','operationed','collected_date','operation_date','preoperative_tumor_treatment','Chief_complaint','drinking','hypertension','diabetes','smoking','history_of_cancer','systemic_diseases','family_history','antiviral_therapy','blood_lipids ','biochemical_indicators','lymphocyte','Neutrophils','after_AEP','after_CEA','after_CA19_9','HBV_DNA','hepatitis_B_surface_antigen','surface_antibody','E_antigen','E_antibody','core_antibody','hcv','HCV_Ab','HCV_RNA','thyroid','total_bilirubin','albumin','prothrombin_time','hepatic_encephalopathy','ascites','Child_Pugh','Postoperative_chemotherapy','Recurrence_time','Targeted_drug_therapy','internal','Radiofrequency_therapy','surgical_treatment','Time_of_death','Postoperative_abnormalities','survival_time','Preoperative_colonoscopy','Colonoscopy_pathology','Liver_metastasis','number','max_diameter','diameter','sub_stove','Macroscopic_tumor_thrombus','Location_of_tumor_thrombus','envelope','necrosis','Extrahepatic_nvasion','Capsule_breakthrough','Multifocal_growth_under_microscope','Mirror_sub_stove','Microvascular_tumor_thrombus','cirrhosis','hepatitis','BCLC','UICC','Postoperative_TACE','Antiviral_therapy_after_operation','PSA','Lauren_classification','remarks','treatment','timestamp','deleted',]
         if trans:
             column_list = {
+                '疾病类型': 'disease_type',
                 '就诊年龄': 'age',
                 '病理完整信息': 'pathological_information',
                 '进展': 'process',
@@ -730,12 +735,15 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             if not trans and field in data:
                 if field in ['timestamp', 'collected_date','Time_of_death','operation_date','prothrombin_time','Recurrence_time','survival_time']:
                     data[field] = transfor_dateformat(str(data[field]))
-                if not data.get('id',0):
-                    continue
+                # if not data.get('id',0):
+                #     continue
                 setattr(self, field, data[field])
             elif trans and field in data:
                 if column_list[field] in ['timestamp', 'collected_date','Time_of_death','operation_date','prothrombin_time','Recurrence_time','survival_time']:
                     data[field] = transfor_dateformat(str(data[field]))
+                if not isinstance(data.get('就诊年龄'),int):
+                    data['就诊年龄'] = 0
+                # print(data.get('就诊年龄',None))
                 setattr(self, column_list[field], data[field])
 
 
@@ -805,13 +813,20 @@ class SampleSequence(SearchableMixin, PaginatedAPIMixin, db.Model):
             'disease_id': self.disease_id,
             # 'result_id': [result.id for result in self.results],
             'disease_type':self.disease_type,
-            'results':{},
+            'special_operation':self.special_operation,
+            'results':[],
             'author': {},
             'disease':{},
             '_links': {
                 'self': url_for('api.get_sequence', id=self.sequence_id),  #获取详情 TODO
             }
         }
+        if self.results:
+            for result in self.results:
+                data['results'].append(result.batch)
+        if len(self.results.all()) > 1:
+            # print('多个批次',self.sequence_id)
+            pass
         return data
 
     def from_dict(self, data,trans=False):
@@ -935,8 +950,8 @@ class SequenceResult(SearchableMixin, PaginatedAPIMixin, db.Model):
             if not trans and field in data:
                 # if field in ['timestamp', 'collected_date']:
                     # data[field] = datetime.strptime(str(data[field])[:-5], '%Y-%m-%dT%H:%M:%S')
-                if not data.get('id',0):
-                    continue
+                # if not data.get('id',0):
+                #     continue
                 setattr(self, field, data[field])
             elif trans and field in data:
                 # if column_list[field] in ['timestamp', 'collected_date']:

@@ -19,7 +19,7 @@ def excel_create_disease():
         return bad_request('excel表内容为空')
 
     sample_data = data['data']
-    print(sample_data)
+    # print(sample_data)
     n = 1
     sequence_ids = []
     origin_list = (
@@ -32,39 +32,52 @@ def excel_create_disease():
             .group_by(SampleSequence.disease_type)
             .all()
     )
-    
+    list = []
+    for i in origin_list:
+        list.append(i[0])
+    print("疾病类型",list)
     with db.session.no_autoflush:
         for data in sample_data:
             n += 1
             # print(data)
             name = data.get('姓名',None)
             origin = data.get('样品来源',None)
+            sequence_id = data.get('Sequence ID', None)
+            if not sequence_id:
+                return bad_request("缺少测序id")
             if not name or not origin or name == '姓名':
-                continue
-
-            if data.get('疾病类型') not in []:
-                print(data)
-                continue
-            patient = PatientBasicInformation.query.filter(PatientBasicInformation.name == name).filter(PatientBasicInformation.name == data['样品来源']).first() or PatientBasicInformation()
+                return bad_request(f"缺少姓名或样本来源{sequence_id}")
+            disease_type = data.get('疾病类型')
+            if disease_type not in list:
+                print('疾病类型错误',data)
+                return bad_request(f"疾病类型错误{sequence_id}")
+            patient = PatientBasicInformation.query.filter(PatientBasicInformation.name == name).filter(PatientBasicInformation.sample_origin == data['样品来源']).first() or PatientBasicInformation()
             patient.from_dict(data, trans=True)
-            sequence_id = data.get('Sequence ID',None)
+            db.session.add(patient)
+            db.session.flush()
             if not SampleSequence.query.get(sequence_id) and sequence_id not in sequence_ids:
-                sequence = SampleSequence()
-                sequence.from_dict(data, trans=True)
-                sequence_ids.append(sequence_id)
+                return bad_request("测序ID不存在")
             else:
                 sequence = SampleSequence.query.get(sequence_id)
-            disease = DiseaseInformation.query.filter(sequence.disease_info.patient_id == patient.id).first() if sequence.disease_info else DiseaseInformation()
-
+            if sequence.disease_info:
+                disease = DiseaseInformation.query.filter(
+                    DiseaseInformation.id == sequence.disease_info.id).first()
+            elif patient.diseases_history.filter(DiseaseInformation.disease_type==disease_type).first():
+                disease = patient.diseases_history.filter(DiseaseInformation.disease_type == disease_type).first()
+            else:
+                DiseaseInformation()
+            # print('查找到的疾病信息', sequence.disease_info, disease, sequence_id, patient.id)
             disease.from_dict(data,trans=True)
-            disease.patient_id = patient.id
-            sequence.disease_id = disease.id
             db.session.add(disease)
-            db.session.add(patient)
+            print('疾病id',disease.id)
             db.session.add(sequence)
-            if sequence.sequence_id == 'Sequence ID':
-                print('id:',sequence.sequence_id)
-                print(n, data)
+            db.session.flush()
+            sequence.disease_id = disease.id
+            db.session.flush()
+            disease.patient_id = patient.id
+            # if sequence.sequence_id == 'Sequence ID':
+            #     print('id:',sequence.sequence_id)
+            #     print(n, data)
         db.session.commit()
     response = restfulResponse("上传完成")
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -219,7 +232,7 @@ def delete_post(id):
 def create_disease():
     '''添加新的病人患病信息'''
     data = request.get_json()
-    print(data)
+    print('创建病信息',data)
     if not data:
         return bad_request('You must post JSON data.')
 

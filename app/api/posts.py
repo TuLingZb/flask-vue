@@ -76,22 +76,65 @@ def chart_origin():
 
 
 @bp.route("/sequences/type", methods=["GET"])
-# @token_auth.login_required
+@token_auth.login_required
 def chart_type():
     """疾病类型统计"""
+    dsType = request.args.get("query",None)
     dict = []
-    origin_list = (
-        db.session.query(SampleSequence.disease_type, db.func.count("*").label("value"))
-        .filter(
-            and_(
-                SampleSequence.disease_type != ".", SampleSequence.disease_type != None
+    if dsType:
+        origin_list = (
+            db.session.query(SampleSequence.disease_type, db.func.count("*").label("value"))
+            .filter(
+                SampleSequence.disease_type.like(
+                    "%{ds_type}%".format(ds_type=dsType)
+                )
             )
+            .group_by(SampleSequence.disease_type)
+            .all()
         )
-        .group_by(SampleSequence.disease_type)
-        .all()
-    )
+    else:
+        origin_list = (
+            db.session.query(SampleSequence.disease_type, db.func.count("*").label("value"))
+            .filter(
+                and_(
+                    SampleSequence.disease_type != ".", SampleSequence.disease_type != None
+                )
+            )
+            .group_by(SampleSequence.disease_type)
+            .all()
+        )
     for key, value in list(origin_list):
         dict.append({"name": key, "value": value})
+    return restfulResponse(dict)
+
+
+@bp.route("/sequences/beizhu", methods=["GET"])
+# @token_auth.login_required
+def chart_beizhu():
+    """是否浓缩统计"""
+    dsType = request.args.get("query",None)
+    dict = []
+    if dsType:
+        pass
+    else:
+        no_list = (
+            db.session.query(db.func.count("*"))
+            .filter(
+                    SampleSequence.special_operation.like("未浓缩%")
+            )
+            .first()
+        )
+        yes_list = (
+            db.session.query(db.func.count("*"))
+            .filter(
+                    SampleSequence.special_operation.notlike("未浓缩%")
+            )
+            .first()
+        )
+
+
+    dict.append({"name": "未浓缩", "value": no_list[0]})
+    dict.append({"name": "已浓缩", "value": yes_list[0]})
     return restfulResponse(dict)
 
 
@@ -156,7 +199,7 @@ def excel_create():
     response.headers["Access-Control-Allow-Origin"] = "*"
     return response
 
-
+from app.utils.date_trans import transfor_batch
 @bp.route("/result/import", methods=["POST"])
 @token_auth.login_required(role=Config.WRITE)
 def excel_create_result():
@@ -166,18 +209,21 @@ def excel_create_result():
         return bad_request("excel表内容为空")
 
     sample_data = data["data"]
-    print(sample_data)
+    # print(sample_data)
     print(len(sample_data))
     with db.session.no_autoflush:
         for data in sample_data:
             sequence_id = data.get("Sequence ID", None)
             batch = data.get("测序批次", "")
+            batch = transfor_batch(batch,sequence_id)
             if not isinstance(sequence_id, int):
                 # print(data)
                 continue
             post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
             post.from_dict(data, trans=True)
             post.author = g.current_user
+            db.session.add(post)
+            db.session.flush() #先执行插入操作
             result = (
                 SequenceResult.query.filter(SequenceResult.sequence_id == sequence_id)
                 .filter(SequenceResult.batch == batch)
@@ -185,8 +231,8 @@ def excel_create_result():
                 or SequenceResult()
             )
             result.from_dict(data, trans=True)
+            result.batch = batch
             db.session.add(result)
-            db.session.add(post)
         db.session.commit()
     response = restfulResponse("上传完成")
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -321,6 +367,19 @@ def update_sequence():
         return restfulResponse({}, code=4004, msg="测序ID不存在")
 
     post.from_dict(data)
+    newBatch = data.get("batch")
+    oldBatch = db.session.query(SequenceResult.batch).filter(SequenceResult.sequence_id==post.sequence_id).all()
+    print('new',newBatch)
+    print('old',oldBatch)
+    oldBatch = set(map(lambda x: x[0],oldBatch))
+    newBatch = set(newBatch)
+    # delBatch = oldBatch - newBatch  #不能删除批次
+    addBatch = newBatch - oldBatch
+    for i in addBatch:
+        new = SequenceResult()
+        new.batch = i
+        new.sequence_id = post.sequence_id
+        db.session.add(new)
     db.session.commit()
     return restfulResponse(post.to_dict())
 
@@ -357,6 +416,7 @@ def create_results():
     sequence_id = data.get("sequence_id", None)
     if not SampleSequence.query.get(sequence_id):
         return bad_request("测序ID不存在")
+    print('创建结果',data)
     results = SequenceResult()
     results.from_dict(data)
     db.session.add(results)
@@ -377,7 +437,7 @@ def get_results():
         request.args.get("limit", current_app.config["POSTS_PER_PAGE"], type=int), 100
     )
 
-    queryMap = []
+    queryMap = [SequenceResult.deleted == False]
 
     sequence_id = request.args.get("sequence_id", None, type=int)
     batch = request.args.get("batch", None)
@@ -460,14 +520,17 @@ def update_result():
     return restfulResponse(post.to_dict())
 
 
-@bp.route("/result/detele/<int:id>", methods=["DELETE"])
+@bp.route("/result/delete/<int:id>", methods=["DELETE"])
 @token_auth.login_required(role=Config.WRITE)
 def delete_result(id):
     """删除一篇测序信息"""
-    result = SampleSequence.query.get_or_404(id)
+    print('121212sad')
+    result = SequenceResult.query.get(id)
+    if not result:
+        return bad_request("ID不存在")
     # if g.current_user != results.author and not g.current_user.can(Permission.ADMIN):
     #     return error_response(403)
 
     result.deleted = True
     db.session.commit()
-    return "", 204
+    return restfulResponse(result.to_dict())

@@ -30,6 +30,21 @@ def transfor_dateformat(date):
     else:
         return None
 
+def transfor_batch(batch,id):
+    if not batch:
+        return ""
+    batch = str(batch).strip()
+    if re.match('(.*)/',batch):
+        print('不识别的批次', batch, id)
+        # batch = re.match('(.*?)/',batch).group(1)
+    if re.match('(\d{8}).*',batch):
+        batch = re.match('(\d{8}).*',batch).group(1)
+        batch = batch[2:4] + '_' + batch[4:6] + '_' + batch[6:8]
+    elif re.match('(\d{2}_\d{1,2}_\d{1,2}).*',batch):
+        batch = re.match('(\d{2}_\d{1,2}_\d{1,2}).*',batch).group(1)
+    elif re.match('(\d{2} _\d{1,2}_\d{1,2}).*',batch):
+        batch = re.match('(\d{2} _\d{1,2}_\d{1,2}).*',batch).group(1)
+    return batch
 
 def logger():
     time_format = '%Y%m%d%H%M%S '
@@ -51,4 +66,8 @@ if __name__ == '__main__':
     # transfor_dateformat(c)
     # transfor_dateformat(d)
     # transfor_dateformat(e)
-    print(logger())
+    # print(logger())
+    ff = '20190405/20_03_11.data'
+    dd = '19_6_20/20_1_19.20Gdata/20_02_29/20_03_11.data'
+    # print(transfor_batch(ff))
+    print(transfor_batch(dd))
