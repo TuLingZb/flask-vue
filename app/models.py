@@ -954,10 +954,12 @@ class SequenceResult(SearchableMixin, PaginatedAPIMixin, db.Model):
                 #     continue
                 setattr(self, field, data[field])
             elif trans and field in data:
-                # if column_list[field] in ['timestamp', 'collected_date']:
-                #     data[field] = datetime.strptime(str(data[field])[:-5], '%Y-%m-%dT%H:%M:%S')
-                if data[field] == '.':
-                    data[field] = None
+                if column_list[field] in ['data_quality_input', 'data_quality_bam', 'data_quality_bam_input', 'data_Quality_uniq_bam','data_Quality_uniq_nodup_bam','data_Quality_uniq_nodup_bam_input','coverage']:
+                    try:
+                        data[field] = float(data[field])
+                    except:
+                        data[field] = 0.00
+
                 setattr(self, column_list[field], data[field])
 
 #
