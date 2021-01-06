@@ -14,10 +14,10 @@ import os
 basedir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 
-@bp.route("/upload", methods=["POST"])
+@bp.route("/sequences/upload", methods=["POST"])
 @token_auth.login_required
-def file_upload():
-    """样本来源统计"""
+def sequences_file_upload():
+    """样本信息文件导入"""
     # a = request.get_array(field_name='file')
     # print(a)
     #
@@ -26,28 +26,119 @@ def file_upload():
     if fileObj.filename.split(".")[-1] not in ["xlsx", "xls"]:
         return bad_request("文件格式不支持")
 
-    def category_init_func(row):
-        sequence_id = row.get("Sequence ID", None)
-        if not isinstance(sequence_id, int):
-            print(row)
-            return None
-        post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
-        post.from_dict(row, trans=True)
-        return post
+    # def category_init_func(row):
+    #     sequence_id = row.get("Sequence ID", None)
+    #     if not isinstance(sequence_id, int):
+    #         print(row)
+    #         return None
+    #     post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
+    #     post.from_dict(row, trans=True)
+    #     return post
 
-    request.save_book_to_database(
-        field_name="file",
-        session=db.session,
-        tables=[SampleSequence],
-        initializers=[category_init_func],
-    )
+    # request.save_book_to_database(
+    #     field_name="file",
+    #     session=db.session,
+    #     tables=[SampleSequence],
+    #     initializers=[category_init_func],
+    # )
+
+    # d = request.get_dict(field_name='file')
+    # r = request.get_records(field_name='file')
+    # b = request.get_book_dict(field_name='file')
+    b = request.get_book(field_name='file',)
+    b = b.to_dict()
+    for i in b.keys():
+        print(i) #获取工作表名称
+        sheet_content = request.get_records(field_name='file',sheet_name=i,name_columns_by_row=0) #  name_columns_by_row指定一行作为表头
+        with db.session.no_autoflush:
+            for data in sheet_content:
+                sequence_id = data.get("Sequence ID", None)
+                if not isinstance(sequence_id, int):
+                    continue
+                    # return bad_request(f"缺少Sequence ID{sequence_id}")
+                post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
+                post.from_dict(data, trans=True)
+                post.author = g.current_user
+                db.session.add(post)
+            db.session.commit()
+
+    return restfulResponse("文件上传成功")
 
     # if not os.path.exists(os.path.join(basedir,"user_file/" + str(g.current_user.username))):
     #     os.mkdir(os.path.join(basedir,"user_file/"+str(g.current_user.username)))
     # file_name = str(logger()).strip()+ fileObj.filename.strip()
     # fileObj.save(os.path.join(basedir,"user_file/"+str(g.current_user.username),file_name))
 
+@bp.route("/result/upload", methods=["POST"])
+@token_auth.login_required
+def result_file_upload():
+    """样本信息文件导入"""
+    # a = request.get_array(field_name='file')
+    # print(a)
+    #
+    # # # 接收文件
+    fileObj = request.files.get("file")
+    if fileObj.filename.split(".")[-1] not in ["xlsx", "xls"]:
+        return bad_request("文件格式不支持")
+
+    # def category_init_func(row):
+    #     sequence_id = row.get("Sequence ID", None)
+    #     if not isinstance(sequence_id, int):
+    #         print(row)
+    #         return None
+    #     post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
+    #     post.from_dict(row, trans=True)
+    #     return post
+
+    # request.save_book_to_database(
+    #     field_name="file",
+    #     session=db.session,
+    #     tables=[SampleSequence],
+    #     initializers=[category_init_func],
+    # )
+
+    # d = request.get_dict(field_name='file')
+    # r = request.get_records(field_name='file')
+    # b = request.get_book_dict(field_name='file')
+    b = request.get_book(field_name='file',)
+    b = b.to_dict()
+    for i in b.keys():
+        print(i) #获取工作表名称
+        sheet_content = request.get_records(field_name='file',sheet_name=i,name_columns_by_row=0) #  name_columns_by_row指定一行作为表头
+        with db.session.no_autoflush:
+            for data in sheet_content:
+                sequence_id = data.get("Sequence ID", None)
+                batch = data.get("测序批次", "")
+                batch = transfor_batch(batch, sequence_id)
+                if not isinstance(sequence_id, int):
+                    # print(data)
+                    continue
+                post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
+                post.from_dict(data, trans=True)
+                post.author = g.current_user
+                result = (
+                        SequenceResult.query.filter(SequenceResult.sequence_id == sequence_id)
+                        .filter(SequenceResult.batch == batch).first()
+                )
+                if not result:
+                    result = SequenceResult()
+                    result.from_dict(data, trans=True)
+                    result.batch = batch
+                    db.session.add(result)
+                    db.session.flush()
+                else:
+                    result.from_dict(data, trans=True)
+                    result.batch = batch
+            db.session.commit()
+
     return restfulResponse({})
+
+    # if not os.path.exists(os.path.join(basedir,"user_file/" + str(g.current_user.username))):
+    #     os.mkdir(os.path.join(basedir,"user_file/"+str(g.current_user.username)))
+    # file_name = str(logger()).strip()+ fileObj.filename.strip()
+    # fileObj.save(os.path.join(basedir,"user_file/"+str(g.current_user.username),file_name))
+
+
 
 
 @bp.route("/sequences/origin", methods=["GET"])
@@ -156,20 +247,8 @@ def chart_coverage():
     return restfulResponse(dict)
 
 
-@bp.route("/sequence/search", methods=["POST"])
-@token_auth.login_required(role=Config.WRITE)
-def search_sequence():
-
-    pass
 
 
-@bp.route("/result/search", methods=["POST"])
-@token_auth.login_required(role=Config.WRITE)
-def search_result():
-    data = request.get_json()
-    if not data:
-        return bad_request("查询内容为空")
-    pass
 
 
 @bp.route("/sequences/import", methods=["POST"])
@@ -341,14 +420,32 @@ def get_sequences():
     return restfulResponse(data)
 
 
-@bp.route("/sequences/detail/<int:id>", methods=["GET"])
+@bp.route("/sequences/detail", methods=["POST"])
 @token_auth.login_required(role=Config.WRITE)
-def get_sequence(id):
+def get_sequence():
     """返回一篇测序信息"""
-    post = SampleSequence.query.get_or_404(id)
-    data = post.to_dict()
+    data = request.get_json()
+    ids = data.get("ids", [])
+    dises = SampleSequence.query.filter(SampleSequence.sequence_id.in_(ids)).order_by(
+        SampleSequence.sequence_id.asc()).all()
+    data = {"items": [item.to_dict() for item in dises]}
     return restfulResponse([data])
 
+@bp.route("/sequences/info", methods=["POST"])
+@token_auth.login_required(role=Config.WRITE)
+def get_sequence_info():
+    """返回一篇测序信息"""
+    data = request.get_json()
+    id = data.get("id", [])
+    sequence = SampleSequence.query.get(id)
+    if not sequence:
+        return bad_request("信息不存在")
+    diseease_id = [sequence.disease_id] if sequence.disease_info else []
+    patient_id = [sequence.disease_info.patient_id] if sequence.disease_info else []
+
+    data = {"diseease_id": diseease_id,
+            "patient_id":patient_id}
+    return restfulResponse(data)
 
 @bp.route("/sequences/update", methods=["PUT"])
 @token_auth.login_required(role=Config.WRITE)
@@ -464,33 +561,15 @@ def get_results():
     return restfulResponse(data)
 
 
-@bp.route("/result/detail/<int:id>", methods=["GET"])
-def get_result(id):
+@bp.route("/result/detail", methods=["POST"])
+def get_result():
     """返回一篇测序信息"""
-    post = SequenceResult.query.get_or_404(id)
-    data = post.to_dict()
-    # 下一篇文章
-    next_basequery = SequenceResult.query.order_by(
-        SequenceResult.timestamp.desc()
-    ).filter(SequenceResult.timestamp > post.timestamp)
-    if next_basequery.all():
-        data["next_id"] = next_basequery[-1].id
-        data["next_title"] = next_basequery[-1].title
-        data["_links"]["next"] = url_for("api.get_results", id=next_basequery[-1].id)
-    else:
-        data["_links"]["next"] = None
-    # 上一篇文章
-    prev_basequery = SampleSequence.query.order_by(
-        SampleSequence.timestamp.desc()
-    ).filter(SampleSequence.timestamp < post.timestamp)
-    if prev_basequery.first():
-        data["prev_id"] = prev_basequery.first().id
-        data["prev_title"] = prev_basequery.first().title
-        data["_links"]["prev"] = url_for("api.get_result", id=prev_basequery.first().id)
-    else:
-        data["_links"]["prev"] = None
-    return jsonify(data)
-
+    data = request.json()
+    ids = data.get("ids", [])
+    dises = SequenceResult.query.filter(SequenceResult.id.in_(ids)).order_by(
+        SampleSequence.id.asc()).all()
+    data = {"items": [item.to_dict() for item in dises]}
+    return restfulResponse([data])
 
 @bp.route("/result/update/", methods=["PUT"])
 @token_auth.login_required(role=Config.WRITE)

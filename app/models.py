@@ -735,8 +735,6 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             if not trans and field in data:
                 if field in ['timestamp', 'collected_date','Time_of_death','operation_date','prothrombin_time','Recurrence_time','survival_time']:
                     data[field] = transfor_dateformat(str(data[field]))
-                # if not data.get('id',0):
-                #     continue
                 setattr(self, field, data[field])
             elif trans and field in data:
                 if column_list[field] in ['timestamp', 'collected_date','Time_of_death','operation_date','prothrombin_time','Recurrence_time','survival_time']:

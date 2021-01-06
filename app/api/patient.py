@@ -10,6 +10,111 @@ from app.utils.my_response import restfulResponse
 from sqlalchemy import and_
 import json
 
+@bp.route("/disease/upload", methods=["POST"])
+@token_auth.login_required
+def disease_file_upload():
+    """样本信息文件导入"""
+    # a = request.get_array(field_name='file')
+    # print(a)
+    #
+    # # # 接收文件
+    fileObj = request.files.get("file")
+    if fileObj.filename.split(".")[-1] not in ["xlsx", "xls"]:
+        return bad_request("文件格式不支持")
+
+    # def category_init_func(row):
+    #     sequence_id = row.get("Sequence ID", None)
+    #     if not isinstance(sequence_id, int):
+    #         print(row)
+    #         return None
+    #     post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
+    #     post.from_dict(row, trans=True)
+    #     return post
+
+    # request.save_book_to_database(
+    #     field_name="file",
+    #     session=db.session,
+    #     tables=[SampleSequence],
+    #     initializers=[category_init_func],
+    # )
+
+    # d = request.get_dict(field_name='file')
+    # r = request.get_records(field_name='file')
+    # b = request.get_book_dict(field_name='file')
+    b = request.get_book(field_name='file',)
+    b = b.to_dict()
+    origin_list = (
+        db.session.query(SampleSequence.disease_type, db.func.count("*").label("value"))
+            .filter(
+            and_(
+                SampleSequence.disease_type != ".", SampleSequence.disease_type != None
+            )
+        )
+            .group_by(SampleSequence.disease_type)
+            .all()
+    )
+    disease_type_list = []
+    for i in origin_list:
+        disease_type_list.append(i[0])
+    for i in b.keys():
+        # print(i) #获取工作表名称
+        sheet_content = request.get_records(field_name='file',sheet_name=i,name_columns_by_row=0) #  name_columns_by_row指定一行作为表头
+        with db.session.no_autoflush:
+            for data in sheet_content:
+
+                name = data.get('姓名', None)
+                print(name)
+                origin = data.get('样品来源', None)
+                sequence_ids = []
+                sequence_id = data.get('Sequence ID', None)
+                if not sequence_id:
+                    return bad_request("缺少测序id")
+                if name and origin and name not in ['姓名','.']:
+                    patient = PatientBasicInformation.query.filter(PatientBasicInformation.name == name).filter(
+                        PatientBasicInformation.sample_origin == data['样品来源']).first()
+                    if not patient:
+                        patient = PatientBasicInformation()
+                        patient.from_dict(data, trans=True)
+                        db.session.add(patient)
+                        db.session.flush()
+                    else:
+                        patient.from_dict(data, trans=True)
+                else:
+                    patient = None
+                print(data,patient)
+                disease_type = data.get('疾病类型')
+                if disease_type not in disease_type_list:
+                    print('疾病类型错误', data)
+                    return bad_request(f"疾病类型错误,测序ID{sequence_id},请先导入相关测序表格")
+                if not SampleSequence.query.get(sequence_id):
+                    return bad_request("测序ID不存在,请先导入相关测序表格")
+                else:
+                    sequence = SampleSequence.query.get(sequence_id)
+                if sequence.disease_info:
+                    disease = sequence.disease_info
+                    print('存在',sequence_id,disease)
+                elif patient and patient.diseases_history.filter(DiseaseInformation.disease_type == disease_type).first():
+                    disease = patient.diseases_history.filter(DiseaseInformation.disease_type == disease_type).first()
+                else:
+                    print("新建")
+                    disease = DiseaseInformation()
+                    disease.from_dict(data, trans=True)
+                    db.session.add(disease)
+                    db.session.flush()
+                print('疾病id', disease.id)
+                # db.session.add(sequence)
+                sequence.disease_id = disease.id
+                db.session.flush()
+                if patient:
+                    disease.patient_id = patient.id
+            db.session.commit()
+    return restfulResponse({})
+
+    # if not os.path.exists(os.path.join(basedir,"user_file/" + str(g.current_user.username))):
+    #     os.mkdir(os.path.join(basedir,"user_file/"+str(g.current_user.username)))
+    # file_name = str(logger()).strip()+ fileObj.filename.strip()
+    # fileObj.save(os.path.join(basedir,"user_file/"+str(g.current_user.username),file_name))
+
 @bp.route('/disease/import', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
 def excel_create_disease():
@@ -38,7 +143,6 @@ def excel_create_disease():
     print("疾病类型",list)
     with db.session.no_autoflush:
         for data in sample_data:
-            n += 1
             # print(data)
             name = data.get('姓名',None)
             origin = data.get('样品来源',None)
@@ -153,28 +257,14 @@ def get_patients():
     return restfulResponse(data)
 
 
-@bp.route('/patient/detail/<int:id>', methods=['GET'])
+@bp.route('/patient/detail', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
-def get_patient(id):
+def get_patient():
     '''返回一个病人信息'''
-    post = PatientBasicInformation.query.get_or_404(id)
-    data = post.to_dict()
-    # 下一个病人信息
-    next_basequery = PatientBasicInformation.query.order_by(PatientBasicInformation.timestamp.desc()).filter(PatientBasicInformation.timestamp > post.timestamp)
-    if next_basequery.all():
-        data['next_id'] = next_basequery[-1].id
-        data['next_title'] = next_basequery[-1].name
-        data['_links']['next'] = url_for('api.get_patient', id=next_basequery[-1].id)
-    else:
-        data['_links']['next'] = None
-    # 上一个病人信息
-    prev_basequery = PatientBasicInformation.query.order_by(PatientBasicInformation.timestamp.desc()).filter(PatientBasicInformation.timestamp < post.timestamp)
-    if prev_basequery.first():
-        data['prev_id'] = prev_basequery.first().id
-        data['prev_title'] = prev_basequery.first().name
-        data['_links']['prev'] = url_for('api.get_patient', id=prev_basequery.first().id)
-    else:
-        data['_links']['prev'] = None
+    data = request.get_json()
+    ids = data.get("ids", [])
+    dises = PatientBasicInformation.query.filter(PatientBasicInformation.id.in_(ids)).order_by(PatientBasicInformation.id.asc()).all()
+    data = {"items": [item.to_dict() for item in dises]}
     return restfulResponse(data)
 
 
@@ -245,6 +335,13 @@ def create_disease():
     # disease_info.patient_id = id
 
     db.session.add(disease_info)
+    db.session.flush()
+    sequences = data.get('sequences',[])
+    for sequence in sequences:
+        sample = SampleSequence.query.get(sequence)
+        if not sample:
+            return bad_request(f"{sequence}测序id不存在")
+        sample.disease_id = disease_info.id
     db.session.commit()
     response = restfulResponse(disease_info.to_dict())
     response.status_code = 201
@@ -262,9 +359,13 @@ def get_patient_diseases():
     queryMap = []
     queryMap.append(DiseaseInformation.deleted == False)  # 非删除
     sequence_id = request.args.get('sequence_id', None)  # 疾病类型
+    disease_type = request.args.get('disease_type', None)  # 疾病类型
     if sequence_id:
         sample = SampleSequence.query.filter(SampleSequence.sequence_id==sequence_id).first()
+        print('疾病查询',sample.disease_id)
         queryMap.append(DiseaseInformation.id == sample.disease_id)
+    if disease_type:
+        queryMap.append(DiseaseInformation.disease_type == disease_type)
 
 
     querySort = DiseaseInformation.timestamp.desc()
@@ -288,29 +389,13 @@ def get_patient_diseases():
     print(type(data))
     return restfulResponse(data)
 
-@bp.route('/diseases/<int:id>', methods=['GET'])
-def get_disease(id):
+@bp.route('/diseases/detail', methods=['POST'])
+def get_disease_detail():
     '''返回当前患病详情'''
-    post = DiseaseInformation.query.get_or_404(id)
-    data = post.to_dict()
-    # 下一个病人信息
-    next_basequery = DiseaseInformation.query.order_by(DiseaseInformation.timestamp.desc()).filter(
-        DiseaseInformation.timestamp > post.timestamp)
-    if next_basequery.all():
-        data['next_id'] = next_basequery[-1].id
-        data['next_title'] = next_basequery[-1].name
-        data['_links']['next'] = url_for('api.get_disease', id=next_basequery[-1].id)
-    else:
-        data['_links']['next'] = None
-    # 上一个病人信息
-    prev_basequery = DiseaseInformation.query.order_by(DiseaseInformation.timestamp.desc()).filter(
-        DiseaseInformation.timestamp < post.timestamp)
-    if prev_basequery.first():
-        data['prev_id'] = prev_basequery.first().id
-        data['prev_title'] = prev_basequery.first().name
-        data['_links']['prev'] = url_for('api.get_disease', id=prev_basequery.first().id)
-    else:
-        data['_links']['prev'] = None
+    data = request.get_json()
+    ids = data.get("ids",[])
+    dises = DiseaseInformation.query.filter(DiseaseInformation.id.in_(ids)).order_by(DiseaseInformation.id.asc()).all()
+    data = {"items":[item.to_dict() for item in dises]}
     return restfulResponse(data)
 
 @bp.route('/disease/update', methods=['PUT'])
@@ -321,14 +406,34 @@ def update_disease():
     #     return error_response(403)
 
     data = request.get_json()
-    post = DiseaseInformation.query.get_or_404(data['id'])
+    disease_info = DiseaseInformation.query.get(data['id'])
     if not data:
         return bad_request('You must post JSON data.')
-
-
-    post.from_dict(data)
+    sequences = data.get('sequences', {})
+    print('id列表',sequences)
+    old = set([i.sequence_id for i in disease_info.sequences])
+    new = set(sequences)
+    add = new - old
+    delect = old - new
+    print('add',add)
+    print('delect',delect)
+    for sequence in add:
+        sequence = int(sequence)
+        sample = SampleSequence.query.get(sequence)
+        if not sample:
+            return bad_request(f"{sequence}测序id不存在")
+        sample.disease_id = disease_info.id
+    for sequence in delect:
+        sequence = int(sequence)
+        sample = SampleSequence.query.get(sequence)
+        if not sample:
+            return bad_request(f"{sequence}测序id不存在")
+        sample.disease_id = None
     db.session.commit()
-    return restfulResponse(post.to_dict())
+
+    disease_info.from_dict(data)
+    db.session.commit()
+    return restfulResponse(disease_info.to_dict())
 
 
 @bp.route('/disease/delete/<int:id>', methods=['DELETE'])
