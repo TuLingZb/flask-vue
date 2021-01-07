@@ -433,9 +433,6 @@ class PatientBasicInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             'date': self.date,
             'address': self.address,
             'sample_origin':self.sample_origin,
-            '_links': {
-                'self': url_for('api.get_patient_diseases', id=self.id)
-            }
         }
         return data
 
@@ -640,10 +637,12 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             'patient_id': self.patient_id,
             'timestamp':self.timestamp,
             'sequences': [sequence.sequence_id for sequence in self.sequences],
-            '_links': {
-                'self': url_for('api.get_role', id=self.id)
-            }
         }
+        if self.patient_id:
+            patient = PatientBasicInformation.query.get(self.patient_id)
+            p_data = patient.to_dict()
+            del p_data['id']
+            data.update(p_data)
         return data
 
     def from_dict(self, data,trans=False):

@@ -362,6 +362,8 @@ def get_patient_diseases():
     disease_type = request.args.get('disease_type', None)  # 疾病类型
     if sequence_id:
         sample = SampleSequence.query.filter(SampleSequence.sequence_id==sequence_id).first()
+        if not sample:
+            return bad_request("测序ID不存在")
         print('疾病查询',sample.disease_id)
         queryMap.append(DiseaseInformation.id == sample.disease_id)
     if disease_type:
@@ -389,13 +391,28 @@ def get_patient_diseases():
     print(type(data))
     return restfulResponse(data)
 
-@bp.route('/diseases/detail', methods=['POST'])
+@bp.route('/disease/detail', methods=['POST'])
 def get_disease_detail():
     '''返回当前患病详情'''
     data = request.get_json()
+    print('疾病detail',data)
     ids = data.get("ids",[])
     dises = DiseaseInformation.query.filter(DiseaseInformation.id.in_(ids)).order_by(DiseaseInformation.id.asc()).all()
     data = {"items":[item.to_dict() for item in dises]}
+    return restfulResponse(data)
+
+@bp.route("/disease/info", methods=["POST"])
+@token_auth.login_required(role=Config.WRITE)
+def get_disease_info():
+    """返回一篇疾病信息"""
+    data = request.get_json()
+    id = data.get("id", [])
+    disease = DiseaseInformation.query.get(id)
+    if not disease:
+        return bad_request("信息不存在")
+    sequences = [result.sequence_id for result in disease.sequences] if disease.sequences else []
+
+    data = {"sequences": sequences}
     return restfulResponse(data)
 
 @bp.route('/disease/update', methods=['PUT'])
@@ -449,6 +466,22 @@ def delete_disease(id):
     db.session.commit()
     return restfulResponse({})
 
+@bp.route('/disease/remove', methods=['PUT'])
+@token_auth.login_required(role=Config.WRITE)
+def remove_disease():
+    '''删除一条疾病信息'''
+    data = request.get_json()
+    seuqence_id = data.get('seuqence_id')
+    if not seuqence_id:
+        return bad_request(f"测序ID不存在{seuqence_id}")
+
+    seuqence = SampleSequence.query.get(seuqence_id)
+    if not seuqence:
+        return bad_request("测序ID不存在")
+    print(seuqence_id,'移除的ID为',seuqence.disease_id)
+    seuqence.disease_id= None
+    db.session.commit()
+    return restfulResponse({})
 
 
 @bp.route('/posts/export-posts/', methods=['GET'])

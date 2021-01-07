@@ -425,11 +425,12 @@ def get_sequences():
 def get_sequence():
     """返回一篇测序信息"""
     data = request.get_json()
+    print('didi',data)
     ids = data.get("ids", [])
     dises = SampleSequence.query.filter(SampleSequence.sequence_id.in_(ids)).order_by(
         SampleSequence.sequence_id.asc()).all()
     data = {"items": [item.to_dict() for item in dises]}
-    return restfulResponse([data])
+    return restfulResponse(data)
 
 @bp.route("/sequences/info", methods=["POST"])
 @token_auth.login_required(role=Config.WRITE)
@@ -441,10 +442,10 @@ def get_sequence_info():
     if not sequence:
         return bad_request("信息不存在")
     diseease_id = [sequence.disease_id] if sequence.disease_info else []
-    patient_id = [sequence.disease_info.patient_id] if sequence.disease_info else []
+    results = [result.id for result in sequence.results] if sequence.results else []
 
     data = {"diseease_id": diseease_id,
-            "patient_id":patient_id}
+            "patient_id":results}
     return restfulResponse(data)
 
 @bp.route("/sequences/update", methods=["PUT"])
@@ -564,12 +565,13 @@ def get_results():
 @bp.route("/result/detail", methods=["POST"])
 def get_result():
     """返回一篇测序信息"""
-    data = request.json()
+    data = request.get_json()
     ids = data.get("ids", [])
+    print(ids)
     dises = SequenceResult.query.filter(SequenceResult.id.in_(ids)).order_by(
-        SampleSequence.id.asc()).all()
+        SequenceResult.id.asc()).all()
     data = {"items": [item.to_dict() for item in dises]}
-    return restfulResponse([data])
+    return restfulResponse(data)
 
 @bp.route("/result/update/", methods=["PUT"])
 @token_auth.login_required(role=Config.WRITE)
@@ -613,3 +615,21 @@ def delete_result(id):
     result.deleted = True
     db.session.commit()
     return restfulResponse(result.to_dict())
+
+
+@bp.route("/result/remove", methods=["PUT"])
+@token_auth.login_required(role=Config.WRITE)
+def remove_result():
+    """删除一篇测序信息"""
+    data = request.get_json()
+    result_id = data.get('result_id')
+    if not result_id:
+        return bad_request("结果信息ID无效")
+
+    result = SequenceResult.query.get(result_id)
+    if not result:
+        return bad_request("结果信息不存在")
+    print("移除测序ID为",result.sequence_id)
+    result.sequence_id = None
+    db.session.commit()
+    return restfulResponse({})
