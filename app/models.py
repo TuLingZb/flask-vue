@@ -309,12 +309,12 @@ class User(PaginatedAPIMixin, db.Model):
 
 
 
-    def generate_confirm_jwt(self, expires_in=3600):
+    def generate_confirm_jwt(self, expires_in=1):
         '''生成确认账户的 JWT'''
         now = datetime.utcnow()
         payload = {
             'confirm': self.id,
-            'exp': now + timedelta(seconds=expires_in),
+            'exp': now + timedelta(days=expires_in),
             'iat': now
         }
         return jwt.encode(
@@ -643,6 +643,7 @@ class DiseaseInformation(SearchableMixin, PaginatedAPIMixin, db.Model):
             p_data = patient.to_dict()
             del p_data['id']
             data.update(p_data)
+            data['patient'] = patient.name + str(patient.id)
         return data
 
     def from_dict(self, data,trans=False):

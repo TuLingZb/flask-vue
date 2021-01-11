@@ -42,7 +42,6 @@ def disease_file_upload():
     # r = request.get_records(field_name='file')
     # b = request.get_book_dict(field_name='file')
     b = request.get_book(field_name='file',)
-    b = b.to_dict()
     origin_list = (
         db.session.query(SampleSequence.disease_type, db.func.count("*").label("value"))
             .filter(
@@ -56,7 +55,7 @@ def disease_file_upload():
     disease_type_list = []
     for i in origin_list:
         disease_type_list.append(i[0])
-    for i in b.keys():
+    for i in b.sheet_names():
         # print(i) #获取工作表名称
         sheet_content = request.get_records(field_name='file',sheet_name=i,name_columns_by_row=0) #  name_columns_by_row指定一行作为表头
         with db.session.no_autoflush:
@@ -232,12 +231,15 @@ def get_patients():
     name = request.args.get('name', None)
     sex = request.args.get('sex', None)
     case_number = request.args.get('case_number', None)
+    patient_id = request.args.get('patient_id', None)
     if name:
         queryMap.append(PatientBasicInformation.name == name)
     if sex:
         queryMap.append(PatientBasicInformation.sex == sex)
     if case_number:
         queryMap.append(PatientBasicInformation.case_number == case_number)
+    if patient_id:
+        queryMap.append(PatientBasicInformation.id == patient_id)
 
     querySort = PatientBasicInformation.timestamp.desc()
     sort = json.loads(request.args.get('sort', '{}'))
@@ -265,6 +267,20 @@ def get_patient():
     ids = data.get("ids", [])
     dises = PatientBasicInformation.query.filter(PatientBasicInformation.id.in_(ids)).order_by(PatientBasicInformation.id.asc()).all()
     data = {"items": [item.to_dict() for item in dises]}
+    return restfulResponse(data)
+
+@bp.route('/patient/info', methods=['POST'])
+@token_auth.login_required(role=Config.WRITE)
+def get_patient_info():
+    '''返回一个病人信息'''
+    data = request.get_json()
+    patient_id = data.get("id", None)
+    if not patient_id:
+        return bad_request("病人ID为空")
+    print("病人info",patient_id)
+    patient = PatientBasicInformation.query.filter(PatientBasicInformation.id==patient_id).order_by(PatientBasicInformation.id.asc()).first()
+    data = {"diseease_id": [item.id for item in patient.diseases_history],
+            "patient_id":patient_id,}
     return restfulResponse(data)
 
 
@@ -299,23 +315,26 @@ def update_post():
     return restfulResponse(post.to_dict())
 
 
-@bp.route('/patients/<int:id>', methods=['DELETE'])
+@bp.route('/patient/delete/<int:id>', methods=['DELETE'])
 @token_auth.login_required(role=Config.WRITE)
 def delete_post(id):
     '''删除一位病人信息'''
-    post = PatientBasicInformation.query.get_or_404(id)
+    post = PatientBasicInformation.query.get(id)
+    if not post:
+        return bad_request("病人信息不存在")
     # if g.current_user != post.author and not g.current_user.is_administrator():
     #     return error_response(403)
     if post.diseases_history is not None:
-        return restfulResponse({'msg':'此病人还有关联信息尚未清除，不能删除'})
+        return bad_request('此病人还有关联信息尚未清除，不能删除')
     db.session.delete(post)
     db.session.commit()
-    return '', 204
+    return restfulResponse({})
 
 
 ###
 #病人病历相关
-##
+##im
+import re
 
 @bp.route('/disease/create', methods=['POST'])
 @token_auth.login_required(role=Config.WRITE)
@@ -336,6 +355,12 @@ def create_disease():
 
     db.session.add(disease_info)
     db.session.flush()
+
+    patient = data.get('patient',None)
+    if patient:
+        patient = re.match('\d+',patient).group()
+    disease_info.patient_id = patient
+
     sequences = data.get('sequences',[])
     for sequence in sequences:
         sample = SampleSequence.query.get(sequence)
@@ -471,15 +496,23 @@ def delete_disease(id):
 def remove_disease():
     '''删除一条疾病信息'''
     data = request.get_json()
-    seuqence_id = data.get('seuqence_id')
-    if not seuqence_id:
-        return bad_request(f"测序ID不存在{seuqence_id}")
-
-    seuqence = SampleSequence.query.get(seuqence_id)
-    if not seuqence:
-        return bad_request("测序ID不存在")
-    print(seuqence_id,'移除的ID为',seuqence.disease_id)
-    seuqence.disease_id= None
+    print(data)
+    seuqence_id = data.get('parent_id')
+    dieseas_id = data.get('dieseas_id')
+    if not seuqence_id and not dieseas_id:
+        return bad_request(f"测序ID不存在")
+    if seuqence_id:
+        seuqence = SampleSequence.query.get(seuqence_id)
+        if not seuqence:
+            return bad_request("测序ID不存在")
+        print(seuqence_id,'移除的ID为',seuqence.disease_id)
+        seuqence.disease_id = None
+    if dieseas_id:
+        dieseas = DiseaseInformation.query.get(dieseas_id)
+        if not dieseas:
+            return bad_request("疾病信息不存在")
+        print(dieseas_id,'移除的ID为', dieseas.patient_id)
+        dieseas.patient_id = None
     db.session.commit()
     return restfulResponse({})
 

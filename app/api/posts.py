@@ -46,8 +46,7 @@ def sequences_file_upload():
     # r = request.get_records(field_name='file')
     # b = request.get_book_dict(field_name='file')
     b = request.get_book(field_name='file',)
-    b = b.to_dict()
-    for i in b.keys():
+    for i in b.sheet_names():
         print(i) #获取工作表名称
         sheet_content = request.get_records(field_name='file',sheet_name=i,name_columns_by_row=0) #  name_columns_by_row指定一行作为表头
         with db.session.no_autoflush:
@@ -101,9 +100,8 @@ def result_file_upload():
     # r = request.get_records(field_name='file')
     # b = request.get_book_dict(field_name='file')
     b = request.get_book(field_name='file',)
-    b = b.to_dict()
-    for i in b.keys():
-        print(i) #获取工作表名称
+    for i in b.sheet_names():
+        print('sheetName',i) #获取工作表名称
         sheet_content = request.get_records(field_name='file',sheet_name=i,name_columns_by_row=0) #  name_columns_by_row指定一行作为表头
         with db.session.no_autoflush:
             for data in sheet_content:
@@ -443,9 +441,11 @@ def get_sequence_info():
         return bad_request("信息不存在")
     diseease_id = [sequence.disease_id] if sequence.disease_info else []
     results = [result.id for result in sequence.results] if sequence.results else []
-
+    print(results)
+    # results = [result.id for result in results]
     data = {"diseease_id": diseease_id,
             "patient_id":results}
+    print('result',data)
     return restfulResponse(data)
 
 @bp.route("/sequences/update", methods=["PUT"])
