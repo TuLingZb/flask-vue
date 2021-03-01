@@ -10,6 +10,7 @@ from app.utils.sql_json import match_name_1
 from sqlalchemy import and_
 import json
 import os
+import pandas as pd
 
 basedir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
@@ -46,7 +47,12 @@ def sequences_file_upload():
     # r = request.get_records(field_name='file')
     # b = request.get_book_dict(field_name='file')
     b = request.get_book(field_name='file',)
+    # sheets = pd.read_excel(fileObj,sheet_name=None)
+    # print("获取sheet名",sheets.names)
+    # sheet_names = sheets #todo
+
     for i in b.sheet_names():
+    # for i in sheet_names:
         print(i) #获取工作表名称
         sheet_content = request.get_records(field_name='file',sheet_name=i,name_columns_by_row=0) #  name_columns_by_row指定一行作为表头
         with db.session.no_autoflush:
@@ -107,9 +113,10 @@ def result_file_upload():
             for data in sheet_content:
                 sequence_id = data.get("Sequence ID", None)
                 batch = data.get("测序批次", "")
+                print(sequence_id,batch)
                 batch = transfor_batch(batch, sequence_id)
                 if not isinstance(sequence_id, int):
-                    # print(data)
+                    print('跳过',data)
                     continue
                 post = SampleSequence.query.get(int(sequence_id)) or SampleSequence()
                 post.from_dict(data, trans=True)
@@ -118,15 +125,19 @@ def result_file_upload():
                         SequenceResult.query.filter(SequenceResult.sequence_id == sequence_id)
                         .filter(SequenceResult.batch == batch).first()
                 )
+                print(result)
                 if not result:
+                    print('新建')
                     result = SequenceResult()
                     result.from_dict(data, trans=True)
                     result.batch = batch
                     db.session.add(result)
                     db.session.flush()
                 else:
+                    print('更新')
                     result.from_dict(data, trans=True)
                     result.batch = batch
+                    result.deleted = 0
             db.session.commit()
 
     return restfulResponse({})
